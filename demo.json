@@ -1,0 +1,62 @@
+{
+    "meta": {
+        "authority": "Campadrenalin/Rainfly_X/Philip Horger",
+        "contact": "@campadrenalin on github, or philip@roaming-initiative.com, or rainfly_x on reddit/HypeIRC/socialno.de",
+        "about": "Roaming Initiative company DJDNS page.",
+        "policy": "Private"
+    },
+    "branches": [
+        {
+            "selector": "^(gmg\\.)?ri\\.hype$",
+            "records" : [
+                {
+                    "domain_name": "ri.hype",
+                    "rdata": "173.255.210.202"
+                },
+                {
+                    "domain_name": "ri.hype",
+                    "rtype" : "AAAA",
+                    "rdata": "fcd5:7d07:2146:f18f:f937:d46e:77c9:80e7"
+                },
+                {
+                    "domain_name": "ri.hype",
+                    "rtype" : "AAAA",
+                    "rdata": "2600:3c01::f03c:91ff:feae:1082"
+                }
+            ],
+            "targets" : [],
+            "users": {
+                  "[\"udp\",[\"fca2:ff9a:3dad:6978:8a8a:b20b:e247:fdb2\",9292],\"philip\"]": {
+                    "encryptor": [
+                      "rsa", 
+                      "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCyiltEORNtqUwBNqUTiksG4qSG\neADNxWRc4Fn6q0d7tbwe1/JO5cn5y/TSFL1HPJVmeLvd4/KiYejK6EaxCWlCFGHI\nHAqSlRRFicuUfBcQHiVuUkwOYB3SytlFU8orHnjq291zZb9BeEaFOC0lQwA8KViD\n3IZehnMZemJ25ObX+wIDAQAB\n-----END PUBLIC KEY-----"
+                    ], 
+                    "name": "philip@ri.hype", 
+                    "location": [
+                      "udp", 
+                      [
+                        "fca2:ff9a:3dad:6978:8a8a:b20b:e247:fdb2", 
+                        9292
+                      ], 
+                      "philip"
+                    ]
+                  }
+            }
+        },
+        {
+            "selector": "^orchard\\.ri\\.hype$",
+            "records" : [
+                {
+                    "domain_name": "orchard.ri.hype",
+                    "rdata": "106.186.18.242"
+                },
+                {
+                    "domain_name": "orchard.ri.hype",
+                    "rtype" : "AAAA",
+                    "rdata": "fcd4:1dc1:cc08:c97d:85e2:6cad:eab8:864"
+                }
+            ],
+            "targets" : []
+        }
+    ]
+}
