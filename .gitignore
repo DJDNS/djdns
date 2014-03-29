@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+djdns
 
 # Folders
 _obj
@@ -20,3 +21,6 @@ _cgo_export.*
 _testmain.go
 
 *.exe
+
+# Vim swp backups
+*.swp
