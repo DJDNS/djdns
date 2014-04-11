@@ -3,9 +3,9 @@ package main
 //import "github.com/miekg/dns"
 import djutil "github.com/campadrenalin/go-deje/util"
 
-type SerializedPage struct {
+type Page struct {
 	Meta     PageMeta
-	Branches []SerializedBranch
+	Branches []Branch
 }
 
 type PageMeta struct {
@@ -15,19 +15,19 @@ type PageMeta struct {
 	Policy    string
 }
 
-type SerializedBranch struct {
+type Branch struct {
 	Selector string
 	Targets  []string
-	Records  []SerializedRecord
+	Records  []Record
 }
 
-type SerializedRecord struct {
+type Record struct {
 	DomainName string      `json:"domain_name"`
 	Rtype      string      `json:"rtype"`
 	Rdata      interface{} `json:"rdata"`
 }
 
-func (sp *SerializedPage) LoadFrom(data interface{}) error {
+func (sp *Page) LoadFrom(data interface{}) error {
 	err := djutil.CloneMarshal(data, sp)
 	if err != nil {
 		return err
@@ -40,14 +40,14 @@ func (sp *SerializedPage) LoadFrom(data interface{}) error {
 }
 
 // Set default values for missing data
-func (sb *SerializedBranch) Normalize() {
+func (sb *Branch) Normalize() {
 	for r := range sb.Records {
 		sb.Records[r].Normalize()
 	}
 }
 
 // Set default values for missing data
-func (sr *SerializedRecord) Normalize() {
+func (sr *Record) Normalize() {
 	if sr.Rtype == "" {
 		sr.Rtype = "A"
 	}

@@ -18,7 +18,7 @@ func TestGetDemoData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var sp SerializedPage
+	var sp Page
 	err = sp.LoadFrom(data)
 	if err != nil {
 		t.Fatal(err)
@@ -33,38 +33,38 @@ func TestGetDemoData(t *testing.T) {
 	testCompare(t, "Page meta differs", sp.Meta, expected_meta)
 
 	// Could bulk-compare, but it makes it hard to track issues
-	expected_branches := []SerializedBranch{
-		SerializedBranch{
+	expected_branches := []Branch{
+		Branch{
 			Selector: "^(gmg\\.)?ri\\.hype$",
 			Targets:  []string{},
-			Records: []SerializedRecord{
-				SerializedRecord{
+			Records: []Record{
+				Record{
 					DomainName: "ri.hype",
 					Rtype:      "A",
 					Rdata:      "173.255.210.202",
 				},
-				SerializedRecord{
+				Record{
 					DomainName: "ri.hype",
 					Rtype:      "AAAA",
 					Rdata:      "fcd5:7d07:2146:f18f:f937:d46e:77c9:80e7",
 				},
-				SerializedRecord{
+				Record{
 					DomainName: "ri.hype",
 					Rtype:      "AAAA",
 					Rdata:      "2600:3c01::f03c:91ff:feae:1082",
 				},
 			},
 		},
-		SerializedBranch{
+		Branch{
 			Selector: "^orchard\\.ri\\.hype$",
 			Targets:  []string{},
-			Records: []SerializedRecord{
-				SerializedRecord{
+			Records: []Record{
+				Record{
 					DomainName: "orchard.ri.hype",
 					Rtype:      "A",
 					Rdata:      "106.186.18.242",
 				},
-				SerializedRecord{
+				Record{
 					DomainName: "orchard.ri.hype",
 					Rtype:      "AAAA",
 					Rdata:      "fcd4:1dc1:cc08:c97d:85e2:6cad:eab8:864",
