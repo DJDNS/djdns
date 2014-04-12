@@ -31,3 +31,22 @@ func (sp *Page) Normalize() {
 		sp.Branches[b].Normalize()
 	}
 }
+
+// Does not forward errors from Branch.Matches (which
+// would error on bad regexes, for example).
+//
+// Result will either be a valid Branch pointer or nil,
+// depending on whether a matching branch exists. If
+// there are multiple branches that could have matched,
+// you will always get the first one in the array. This
+// is by design, and why branch order matters.
+func (sp *Page) GetBranchForQuery(query string) *Branch {
+	for b := range sp.Branches {
+		// TODO: Handle errors
+		matched, _ := sp.Branches[b].Matches(query)
+		if matched {
+			return &sp.Branches[b]
+		}
+	}
+	return nil
+}

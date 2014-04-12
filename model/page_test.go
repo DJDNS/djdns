@@ -90,3 +90,75 @@ func TestPage_LoadFrom_BadData(t *testing.T) {
 		t.Fatal("Page.LoadFrom should have failed")
 	}
 }
+
+func TestPage_GetBranchForQuery_Multiple(t *testing.T) {
+	var page Page
+	page.Branches = []Branch{
+		Branch{
+			"xyz",
+			make([]string, 0),
+			make([]Record, 0),
+		},
+		Branch{
+			"xy",
+			make([]string, 0),
+			make([]Record, 0),
+		},
+		Branch{
+			"*?",
+			make([]string, 0),
+			make([]Record, 0),
+		},
+		Branch{
+			"abc",
+			make([]string, 0),
+			make([]Record, 0),
+		},
+	}
+	// Should match first, even though it could go for either
+	// of the first two purely on a validity basis.
+	branch := page.GetBranchForQuery("xyzf")
+	expected := &page.Branches[0]
+	if branch != expected {
+		t.Fatalf("Expected %v, got %v", expected, branch)
+	}
+	// Can only match second - so it matches that.
+	branch = page.GetBranchForQuery("xyf")
+	expected = &page.Branches[1]
+	if branch != expected {
+		t.Fatalf("Expected %v, got %v", expected, branch)
+	}
+	// Matches the last one, even after a broken selector
+	branch = page.GetBranchForQuery("abcde")
+	expected = &page.Branches[3]
+	if branch != expected {
+		t.Fatalf("Expected %v, got %v", expected, branch)
+	}
+}
+
+func TestPage_GetBranchForQuery_OneBranch(t *testing.T) {
+	var page Page
+	page.Branches = []Branch{
+		Branch{
+			"xyz",
+			make([]string, 0),
+			make([]Record, 0),
+		},
+	}
+	branch := page.GetBranchForQuery("Some query")
+	if branch != nil {
+		t.Fatal("Returned *Branch should have been nil")
+	}
+	branch = page.GetBranchForQuery("xyz")
+	if branch != &page.Branches[0] {
+		t.Fatalf("Expected %v, got %v", &page.Branches[0], branch)
+	}
+}
+
+func TestPage_GetBranchForQuery_NoBranches(t *testing.T) {
+	var page Page
+	branch := page.GetBranchForQuery("Some query")
+	if branch != nil {
+		t.Fatal("Returned *Branch should have been nil")
+	}
+}
