@@ -81,3 +81,12 @@ func TestGetDemoData(t *testing.T) {
 		testCompare(t, "Branches inequal", branch, expected_branch)
 	}
 }
+
+func TestPage_LoadFrom_BadData(t *testing.T) {
+    data := make(chan int)
+	var sp Page
+	err := sp.LoadFrom(data)
+    if err == nil {
+        t.Fatal("Page.LoadFrom should have failed")
+    }
+}

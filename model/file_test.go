@@ -24,3 +24,11 @@ func TestGetJSONFromFile(t *testing.T) {
 		}
 	}
 }
+
+// Failure case
+func TestGetJSONFromFile_NoSuchFile(t *testing.T) {
+	_, err := GetJSONFromFile("nosuch.file")
+	if err == nil {
+		t.Fatal("GetJSONFromFile should fail on missing file")
+	}
+}
