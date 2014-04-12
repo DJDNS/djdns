@@ -1,4 +1,4 @@
-package main
+package model
 
 //import "github.com/miekg/dns"
 import djutil "github.com/campadrenalin/go-deje/util"
