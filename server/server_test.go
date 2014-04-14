@@ -59,10 +59,19 @@ func Test_DjdnsServer_GetRecords(t *testing.T) {
 	s.Root.Normalize()
 
 	// Actual tests
-	test := GetRecordsTest{
-		"abcde",
-		s.Root.Branches[0].Records,
-		"Basic request",
+	tests := []GetRecordsTest{
+		GetRecordsTest{
+			"abcde",
+			s.Root.Branches[0].Records,
+			"Basic request",
+		},
+		GetRecordsTest{
+			"no such branch",
+			nil,
+			"Branch does not exist",
+		},
 	}
-	test.Run(t, s)
+	for i := range tests {
+		tests[i].Run(t, s)
+	}
 }
