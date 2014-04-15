@@ -82,33 +82,52 @@ func Test_DjdnsServer_GetRecords(t *testing.T) {
 	}
 }
 
-func Test_DjdnsServer_Handle(t *testing.T) {
-	s := setupTestData()
+type ResolveTest struct {
+	QuestionSection []dns.Question
+	ExpectedAnswers []string
+}
+
+func (rt *ResolveTest) TestHandle(t *testing.T, s DjdnsServer) {
+	// Construct query
 	query := new(dns.Msg)
-	query.Question = []dns.Question{
-		dns.Question{"abcdef", dns.TypeA, dns.ClassINET},
-	}
+	query.Question = rt.QuestionSection
+
+	// Get response
 	response, err := s.Handle(query)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// Construct expected response
 	expected := new(dns.Msg)
 	expected.Question = query.Question
-	answers := []string{
-		"first. A 1.1.1.1",
-		"second. A 2.2.2.2",
-	}
-	expected.Answer = make([]dns.RR, len(answers))
-	for i, answer := range answers {
+	expected.Answer = make([]dns.RR, len(rt.ExpectedAnswers))
+	for i, answer := range rt.ExpectedAnswers {
 		rr, err := dns.NewRR(answer)
 		if err != nil {
 			t.Fatal(err)
 		}
 		expected.Answer[i] = rr
 	}
+
+	// Confirm equality
 	if !reflect.DeepEqual(response, expected) {
 		t.Log(response)
 		t.Log(expected)
 		t.Fatal("Response not equal to expected response")
 	}
+}
+
+func Test_DjdnsServer_Handle(t *testing.T) {
+	s := setupTestData()
+	test := ResolveTest{
+		QuestionSection: []dns.Question{
+			dns.Question{"abcdef", dns.TypeA, dns.ClassINET},
+		},
+		ExpectedAnswers: []string{
+			"first. A 1.1.1.1",
+			"second. A 2.2.2.2",
+		},
+	}
+	test.TestHandle(t, s)
 }
