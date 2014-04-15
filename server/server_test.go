@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/campadrenalin/djdns/model"
+	"github.com/miekg/dns"
 	"reflect"
 	"testing"
 )
@@ -38,8 +39,7 @@ func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 	}
 }
 
-func Test_DjdnsServer_GetRecords(t *testing.T) {
-	// Setup
+func setupTestData() DjdnsServer {
 	s := NewServer()
 	s.Root.Branches = []model.Branch{
 		model.Branch{
@@ -57,6 +57,12 @@ func Test_DjdnsServer_GetRecords(t *testing.T) {
 		},
 	}
 	s.Root.Normalize()
+	return s
+}
+
+func Test_DjdnsServer_GetRecords(t *testing.T) {
+	// Setup
+	s := setupTestData()
 
 	// Actual tests
 	tests := []GetRecordsTest{
@@ -73,5 +79,36 @@ func Test_DjdnsServer_GetRecords(t *testing.T) {
 	}
 	for i := range tests {
 		tests[i].Run(t, s)
+	}
+}
+
+func Test_DjdnsServer_Handle(t *testing.T) {
+	s := setupTestData()
+	query := new(dns.Msg)
+	query.Question = []dns.Question{
+		dns.Question{"abcdef", dns.TypeA, dns.ClassINET},
+	}
+	response, err := s.Handle(query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := new(dns.Msg)
+	expected.Question = query.Question
+	answers := []string{
+		"first. A 1.1.1.1",
+		"second. A 2.2.2.2",
+	}
+	expected.Answer = make([]dns.RR, len(answers))
+	for i, answer := range answers {
+		rr, err := dns.NewRR(answer)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected.Answer[i] = rr
+	}
+	if !reflect.DeepEqual(response, expected) {
+		t.Log(response)
+		t.Log(expected)
+		t.Fatal("Response not equal to expected response")
 	}
 }

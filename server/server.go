@@ -1,6 +1,9 @@
 package server
 
-import "github.com/campadrenalin/djdns/model"
+import (
+	"github.com/campadrenalin/djdns/model"
+	"github.com/miekg/dns"
+)
 
 type DjdnsServer struct {
 	Port int
@@ -25,4 +28,25 @@ func (ds *DjdnsServer) GetRecords(q string) []model.Record {
 	} else {
 		return branch.Records
 	}
+}
+
+// Construct a response for a single DNS request.
+func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
+	response := new(dns.Msg)
+	response.Question = query.Question
+	if len(query.Question) > 0 {
+		// Ignore secondary questions
+		question := query.Question[0]
+		records := ds.GetRecords(question.Name)
+		response.Answer = make([]dns.RR, len(records))
+		for i, record := range records {
+			answer, err := record.ToDns()
+			if err != nil {
+				return nil, err
+			}
+			response.Answer[i] = answer
+		}
+	}
+
+	return response, nil
 }
