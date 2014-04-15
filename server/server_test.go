@@ -118,16 +118,29 @@ func (rt *ResolveTest) TestHandle(t *testing.T, s DjdnsServer) {
 	}
 }
 
-func Test_DjdnsServer_Handle(t *testing.T) {
-	s := setupTestData()
-	test := ResolveTest{
+var resolve_tests = []ResolveTest{
+	ResolveTest{
 		QuestionSection: []dns.Question{
-			dns.Question{"abcdef", dns.TypeA, dns.ClassINET},
+			dns.Question{
+				"abcdef", dns.TypeA, dns.ClassINET},
 		},
 		ExpectedAnswers: []string{
 			"first. A 1.1.1.1",
 			"second. A 2.2.2.2",
 		},
+	},
+	ResolveTest{
+		QuestionSection: []dns.Question{
+			dns.Question{
+				"def", dns.TypeA, dns.ClassINET},
+		},
+		ExpectedAnswers: []string{},
+	},
+}
+
+func Test_DjdnsServer_Handle(t *testing.T) {
+	s := setupTestData()
+	for _, test := range resolve_tests {
+		test.TestHandle(t, s)
 	}
-	test.TestHandle(t, s)
 }
