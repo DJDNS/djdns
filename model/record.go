@@ -19,6 +19,9 @@ func (r *Record) Normalize() {
 	if r.Rtype == "" {
 		r.Rtype = "A"
 	}
+	if r.Rttl == 0 {
+		r.Rttl = 3600
+	}
 }
 
 func (r *Record) RdataString() (string, error) {
@@ -28,6 +31,7 @@ func (r *Record) RdataString() (string, error) {
 
 	switch r.Rtype {
 	case "A":
+		rdata, ok = r.Rdata.(string)
 	case "MX":
 		rdata, ok = r.Rdata.(string)
 	default:

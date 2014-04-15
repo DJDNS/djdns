@@ -41,16 +41,19 @@ func TestGetDemoData(t *testing.T) {
 				Record{
 					DomainName: "ri.hype",
 					Rtype:      "A",
+					Rttl:       3600,
 					Rdata:      "173.255.210.202",
 				},
 				Record{
 					DomainName: "ri.hype",
 					Rtype:      "AAAA",
+					Rttl:       3600,
 					Rdata:      "fcd5:7d07:2146:f18f:f937:d46e:77c9:80e7",
 				},
 				Record{
 					DomainName: "ri.hype",
 					Rtype:      "AAAA",
+					Rttl:       3600,
 					Rdata:      "2600:3c01::f03c:91ff:feae:1082",
 				},
 			},
@@ -62,11 +65,13 @@ func TestGetDemoData(t *testing.T) {
 				Record{
 					DomainName: "orchard.ri.hype",
 					Rtype:      "A",
+					Rttl:       3600,
 					Rdata:      "106.186.18.242",
 				},
 				Record{
 					DomainName: "orchard.ri.hype",
 					Rtype:      "AAAA",
+					Rttl:       3600,
 					Rdata:      "fcd4:1dc1:cc08:c97d:85e2:6cad:eab8:864",
 				},
 			},

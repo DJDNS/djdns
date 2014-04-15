@@ -16,6 +16,7 @@ func (test *ToDnsTest) ExtRecord() (dns.RR, error) {
 }
 
 func Test_Record_ToDns(t *testing.T) {
+	// TODO: Add more tests
 	tests := []ToDnsTest{
 		ToDnsTest{
 			Record{
@@ -25,6 +26,13 @@ func Test_Record_ToDns(t *testing.T) {
 				Rdata:      "10 9.9.9.9",
 			},
 			"host.name. 4000 IN MX 10 9.9.9.9",
+		},
+		ToDnsTest{
+			Record{
+				DomainName: "another.host.",
+				Rdata:      "10.10.10.10",
+			},
+			"another.host. 3600 IN A 10.10.10.10",
 		},
 	}
 	for _, test := range tests {
