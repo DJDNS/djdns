@@ -46,7 +46,33 @@ func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
 			}
 			response.Answer[i] = answer
 		}
+		response.Ns = make([]dns.RR, 0)
+		response.Extra = make([]dns.RR, 0)
 	}
 
 	return response, nil
+}
+
+func (ds *DjdnsServer) ServeDNS(rw dns.ResponseWriter, r *dns.Msg) {
+	// TODO: Handle errors
+	response, _ := ds.Handle(r)
+	/*
+	   if err != nil {
+	       response = new(dns.Msg)
+	       response.SetRcode(r, dns.RcodeNameError)
+	   }
+	*/
+	// TODO: Handle errors here too
+	_ = rw.WriteMsg(response)
+}
+
+func (ds *DjdnsServer) Run(addr string) error {
+	server := new(dns.Server)
+	server.Addr = addr
+	server.Net = "udp"
+	server.Handler = ds
+	return server.ListenAndServe()
+}
+
+func (ds *DjdnsServer) Close() {
 }
