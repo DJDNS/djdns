@@ -32,6 +32,8 @@ func (r *Record) RdataString() (string, error) {
 	switch r.Rtype {
 	case "A":
 		rdata, ok = r.Rdata.(string)
+	case "AAAA":
+		rdata, ok = r.Rdata.(string)
 	case "MX":
 		rdata, ok = r.Rdata.(string)
 	default:

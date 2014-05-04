@@ -55,7 +55,7 @@ func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
 }
 
 func (ds *DjdnsServer) ServeDNS(rw dns.ResponseWriter, r *dns.Msg) {
-	// TODO: Handle errors
+	// TODO: Handle errors, test with unknown record type
 	response, _ := ds.Handle(r)
 	/*
 	   if err != nil {

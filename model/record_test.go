@@ -34,6 +34,22 @@ func Test_Record_ToDns(t *testing.T) {
 			},
 			"another.host. 3600 IN A 10.10.10.10",
 		},
+		ToDnsTest{
+			Record{
+				DomainName: "ipv6.example.",
+				Rtype:      "AAAA",
+				Rdata:      "fcd5:7d07:2146:f18f:f937:d46e:77c9:80e7",
+			},
+			"ipv6.example. 3600 IN AAAA fcd5:7d07:2146:f18f:f937:d46e:77c9:80e7",
+		},
+		ToDnsTest{
+			Record{
+				DomainName: "ipv6.short.",
+				Rtype:      "AAAA",
+				Rdata:      "fcd5::77c9:80e7",
+			},
+			"ipv6.short. 3600 IN AAAA fcd5::77c9:80e7",
+		},
 	}
 	for _, test := range tests {
 		expected, err := test.ExtRecord()
