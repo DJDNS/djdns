@@ -85,6 +85,8 @@ func Test_DjdnsServer_GetRecords(t *testing.T) {
 }
 
 type ResolveTest struct {
+	Description     string
+	Header          dns.MsgHdr
 	QuestionSection []dns.Question
 	ExpectedAnswers []string
 }
@@ -92,8 +94,11 @@ type ResolveTest struct {
 type ResolveFunc func(*dns.Msg) (*dns.Msg, error)
 
 func (rt *ResolveTest) run(t *testing.T, resolver ResolveFunc) {
+	t.Log(rt.Description)
+
 	// Construct query
 	query := new(dns.Msg)
+	query.MsgHdr = rt.Header
 	query.Question = rt.QuestionSection
 
 	// Get response
@@ -105,6 +110,7 @@ func (rt *ResolveTest) run(t *testing.T, resolver ResolveFunc) {
 
 	// Construct expected response
 	expected := new(dns.Msg)
+	expected.MsgHdr.Id = query.MsgHdr.Id
 	expected.Question = query.Question
 	expected.Answer = make([]dns.RR, len(rt.ExpectedAnswers))
 	for i, answer := range rt.ExpectedAnswers {
@@ -153,8 +159,6 @@ func (rt *ResolveTest) run(t *testing.T, resolver ResolveFunc) {
 		compare_part(response.Ns, expected.Ns, "Ns")
 		compare_part(response.Extra, expected.Extra, "Extra")
 
-		t.Log(response.Answer[0].Header().Rdlength)
-		t.Log(expected.Answer[0].Header().Rdlength)
 		t.FailNow()
 	}
 }
@@ -175,6 +179,7 @@ func (rt *ResolveTest) TestResolve(t *testing.T, c *dns.Client, addr string) {
 // TODO: Unqualified domains/faliure
 var resolve_tests = []ResolveTest{
 	ResolveTest{
+		Description: "Basic request",
 		QuestionSection: []dns.Question{
 			dns.Question{
 				"abcdef.", dns.TypeA, dns.ClassINET},
@@ -185,6 +190,16 @@ var resolve_tests = []ResolveTest{
 		},
 	},
 	ResolveTest{
+		Description: "Record not found",
+		QuestionSection: []dns.Question{
+			dns.Question{
+				"def.", dns.TypeA, dns.ClassINET},
+		},
+		ExpectedAnswers: []string{},
+	},
+	ResolveTest{
+		Description: "Match the request ID",
+		Header:      dns.MsgHdr{Id: 90},
 		QuestionSection: []dns.Question{
 			dns.Question{
 				"def.", dns.TypeA, dns.ClassINET},

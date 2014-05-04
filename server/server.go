@@ -33,6 +33,7 @@ func (ds *DjdnsServer) GetRecords(q string) []model.Record {
 // Construct a response for a single DNS request.
 func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
 	response := new(dns.Msg)
+	response.MsgHdr.Id = query.MsgHdr.Id
 	response.Question = query.Question
 	if len(query.Question) > 0 {
 		// Ignore secondary questions
