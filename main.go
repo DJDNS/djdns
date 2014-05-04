@@ -9,7 +9,7 @@ import (
 
 func main() {
 	filename := "./model/demo.json"
-	log.Printf("Converting %s", filename)
+	log.Printf("Loading root page from %s", filename)
 	json, err := model.GetJSONFromFile(filename)
 	if err != nil {
 		log.Fatal(err)

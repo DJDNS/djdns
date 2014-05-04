@@ -7,7 +7,7 @@
     },
     "branches": [
         {
-            "selector": "^(gmg\\.)?ri\\.hype$",
+            "selector": "^(gmg\\.)?ri\\.hype\\.$",
             "records" : [
                 {
                     "domain_name": "ri.hype",
@@ -44,7 +44,7 @@
             }
         },
         {
-            "selector": "^orchard\\.ri\\.hype$",
+            "selector": "^orchard\\.ri\\.hype\\.$",
             "records" : [
                 {
                     "domain_name": "orchard.ri.hype",

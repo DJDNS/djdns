@@ -35,7 +35,7 @@ func TestGetDemoData(t *testing.T) {
 	// Could bulk-compare, but it makes it hard to track issues
 	expected_branches := []Branch{
 		Branch{
-			Selector: "^(gmg\\.)?ri\\.hype$",
+			Selector: "^(gmg\\.)?ri\\.hype\\.$",
 			Targets:  []string{},
 			Records: []Record{
 				Record{
@@ -59,7 +59,7 @@ func TestGetDemoData(t *testing.T) {
 			},
 		},
 		Branch{
-			Selector: "^orchard\\.ri\\.hype$",
+			Selector: "^orchard\\.ri\\.hype\\.$",
 			Targets:  []string{},
 			Records: []Record{
 				Record{
@@ -166,4 +166,46 @@ func TestPage_GetBranchForQuery_NoBranches(t *testing.T) {
 	if branch != nil {
 		t.Fatal("Returned *Branch should have been nil")
 	}
+}
+
+func TestPage_GetBranchForQuery_Complex(t *testing.T) {
+	data, err := GetJSONFromFile("demo.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var sp Page
+	err = sp.LoadFrom(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	confirm_correct_branch := func(qs []string, b *Branch) {
+		for _, query := range qs {
+			branch := sp.GetBranchForQuery(query)
+			if branch != b {
+				t.Errorf("Failed on query '%s'", query)
+				t.Fatalf("Expected %v, got %v", b, branch)
+			}
+		}
+	}
+
+	confirm_correct_branch(
+		[]string{
+			"ri.hype.",
+			"gmg.ri.hype.",
+		},
+		&sp.Branches[0],
+	)
+	confirm_correct_branch(
+		[]string{
+			"orchard.ri.hype.",
+		},
+		&sp.Branches[1],
+	)
+	confirm_correct_branch(
+		[]string{
+			"froot.loop.",
+		},
+		nil,
+	)
 }
