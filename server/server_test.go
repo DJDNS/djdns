@@ -57,6 +57,16 @@ func setupTestData() DjdnsServer {
 				},
 			},
 		},
+		model.Branch{
+			Selector: "evil",
+			Records: []model.Record{
+				model.Record{
+					DomainName: "evil.record.",
+					Rtype:      "EVIL",
+					Rdata:      5,
+				},
+			},
+		},
 	}
 	s.Root.Normalize()
 	return s
@@ -88,13 +98,18 @@ type ResolveTest struct {
 	Description     string
 	Header          dns.MsgHdr
 	QuestionSection []dns.Question
+	ExpectedHeader  dns.MsgHdr
 	ExpectedAnswers []string
+	ShouldFail      bool
 }
 
-type ResolveFunc func(*dns.Msg) (*dns.Msg, error)
+type ResolveTester interface {
+	GetResponse(query *dns.Msg) (*dns.Msg, error)
+	WasFailure(response *dns.Msg, err error) bool
+}
 
-func (rt *ResolveTest) run(t *testing.T, resolver ResolveFunc) {
-	t.Log(rt.Description)
+func testResolution(t *testing.T, tester ResolveTester, rt ResolveTest) {
+	t.Log(" => " + rt.Description)
 
 	// Construct query
 	query := new(dns.Msg)
@@ -102,15 +117,26 @@ func (rt *ResolveTest) run(t *testing.T, resolver ResolveFunc) {
 	query.Question = rt.QuestionSection
 
 	// Get response
-	response, err := resolver(query)
-	if err != nil {
-		t.Log(rt)
-		t.Fatal(err)
+	response, err := tester.GetResponse(query)
+	was_failure := tester.WasFailure(response, err)
+	if rt.ShouldFail {
+		// Expecting a failure...
+		// ...in fact, if we don't get one, that's BAD
+		if !was_failure {
+			t.Fatal("Test should have failed, didn't")
+		}
+		return
+	} else {
+		// Normal case, should not fail
+		if was_failure {
+			t.Log(rt)
+			t.Fatal(err)
+		}
 	}
 
 	// Construct expected response
 	expected := new(dns.Msg)
-	expected.MsgHdr.Id = query.MsgHdr.Id
+	expected.MsgHdr = rt.ExpectedHeader
 	expected.Question = query.Question
 	expected.Answer = make([]dns.RR, len(rt.ExpectedAnswers))
 	for i, answer := range rt.ExpectedAnswers {
@@ -163,20 +189,32 @@ func (rt *ResolveTest) run(t *testing.T, resolver ResolveFunc) {
 	}
 }
 
-func (rt *ResolveTest) TestHandle(t *testing.T, s DjdnsServer) {
-	rt.run(t, func(query *dns.Msg) (*dns.Msg, error) {
-		return s.Handle(query)
-	})
+// Tester for the server internal handling
+type RTForHandle struct {
+	Server DjdnsServer
 }
 
-func (rt *ResolveTest) TestResolve(t *testing.T, c *dns.Client, addr string) {
-	rt.run(t, func(query *dns.Msg) (*dns.Msg, error) {
-		response, _, err := c.Exchange(query, addr)
-		return response, err
-	})
+func (tester RTForHandle) GetResponse(query *dns.Msg) (*dns.Msg, error) {
+	return tester.Server.Handle(query)
+}
+func (tester RTForHandle) WasFailure(resp *dns.Msg, err error) bool {
+	return err != nil
 }
 
-// TODO: Unqualified domains/faliure
+// Tester for resolving over the network
+type RTForNetwork struct {
+	Client *dns.Client
+	Addr   string
+}
+
+func (tester RTForNetwork) GetResponse(query *dns.Msg) (*dns.Msg, error) {
+	response, _, err := tester.Client.Exchange(query, tester.Addr)
+	return response, err
+}
+func (tester RTForNetwork) WasFailure(msg *dns.Msg, err error) bool {
+	return err != nil || msg.Rcode != dns.RcodeSuccess
+}
+
 var resolve_tests = []ResolveTest{
 	ResolveTest{
 		Description: "Basic request",
@@ -198,20 +236,34 @@ var resolve_tests = []ResolveTest{
 		ExpectedAnswers: []string{},
 	},
 	ResolveTest{
-		Description: "Match the request ID",
-		Header:      dns.MsgHdr{Id: 90},
+		Description:    "Match the request ID",
+		Header:         dns.MsgHdr{Id: 90},
+		ExpectedHeader: dns.MsgHdr{Id: 90},
 		QuestionSection: []dns.Question{
 			dns.Question{
 				"def.", dns.TypeA, dns.ClassINET},
 		},
 		ExpectedAnswers: []string{},
 	},
+	ResolveTest{
+		Description: "Report errors",
+		ExpectedHeader: dns.MsgHdr{
+			Response: true,
+			Rcode:    dns.RcodeServerFailure,
+		},
+		QuestionSection: []dns.Question{
+			dns.Question{
+				"evil.", dns.TypeA, dns.ClassINET},
+		},
+		ShouldFail: true,
+	},
 }
 
 func Test_DjdnsServer_Handle(t *testing.T) {
 	s := setupTestData()
+	tester := RTForHandle{s}
 	for _, test := range resolve_tests {
-		test.TestHandle(t, s)
+		testResolution(t, tester, test)
 	}
 }
 
@@ -227,7 +279,8 @@ func Test_DjdnsServer_Run(t *testing.T) {
 	<-time.After(50 * time.Millisecond)
 
 	c := new(dns.Client)
+	tester := RTForNetwork{c, addr}
 	for _, test := range resolve_tests {
-		test.TestResolve(t, c, addr)
+		testResolution(t, tester, test)
 	}
 }

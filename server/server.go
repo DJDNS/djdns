@@ -55,14 +55,11 @@ func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
 }
 
 func (ds *DjdnsServer) ServeDNS(rw dns.ResponseWriter, r *dns.Msg) {
-	// TODO: Handle errors, test with unknown record type
-	response, _ := ds.Handle(r)
-	/*
-	   if err != nil {
-	       response = new(dns.Msg)
-	       response.SetRcode(r, dns.RcodeNameError)
-	   }
-	*/
+	response, err := ds.Handle(r)
+	if err != nil {
+		response = new(dns.Msg)
+		response.SetRcode(r, dns.RcodeServerFailure)
+	}
 	// TODO: Handle errors here too
 	_ = rw.WriteMsg(response)
 }
