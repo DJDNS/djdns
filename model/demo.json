@@ -57,6 +57,17 @@
                 }
             ],
             "targets" : []
+        },
+        {
+            "selector": "server.error",
+            "records" : [
+                {
+                    "domain_name": "foo",
+                    "rtype": "NOT A REAL RTYPE",
+                    "rdata": "106.186.18.242"
+                }
+            ],
+            "targets" : []
         }
     ]
 }
