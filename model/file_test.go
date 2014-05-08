@@ -32,7 +32,7 @@ fifth line, after some blanks`)
 		flCheck{54, -1, -1, "After last char"},
 		flCheck{154, -1, -1, "Long after last char"},
 	}
-    //t.Fatal("%v", file_string)
+	//t.Fatal("%v", file_string)
 	for _, check := range checks {
 		line, char := FindLine(file_string, check.ByteOffset)
 		if line != check.Line || char != check.Char {
@@ -78,10 +78,10 @@ func TestGetJSONFromFile_BadJSON(t *testing.T) {
 	if err == nil {
 		t.Fatal("GetJSONFromFile should fail on ill-formed JSON")
 	}
-    err_expected := `line 3, char 2: invalid character '}' looking for beginning of object key string`
-    err_got := err.Error()
-    if err_got != err_expected {
-        t.Errorf("Expected: '%s'", err_expected)
-        t.Errorf("Got: '%s'", err_got)
-    }
+	err_expected := `line 3, char 2: invalid character '}' looking for beginning of object key string`
+	err_got := err.Error()
+	if err_got != err_expected {
+		t.Errorf("Expected: '%s'", err_expected)
+		t.Errorf("Got: '%s'", err_got)
+	}
 }

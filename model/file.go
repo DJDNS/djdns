@@ -8,23 +8,23 @@ import (
 
 func FindLine(text []byte, offset int64) (line int64, char int64) {
 	// TODO: more line ending support using bytes.Replace
-    var pos int64
-    line = 1
-    char = 1
-    if (offset >= int64(len(text))) {
-        line, char = -1, -1
-        return
-    }
-    for pos < offset {
-        if text[pos] == '\n' {
-            line++
-            char = 1
-        } else {
-            char++
-        }
+	var pos int64
+	line = 1
+	char = 1
+	if offset >= int64(len(text)) {
+		line, char = -1, -1
+		return
+	}
+	for pos < offset {
+		if text[pos] == '\n' {
+			line++
+			char = 1
+		} else {
+			char++
+		}
 
-        pos++
-    }
+		pos++
+	}
 	return
 }
 
