@@ -2,24 +2,29 @@ package main
 
 //import "flag"
 import (
-	"github.com/campadrenalin/djdns/model"
 	"github.com/campadrenalin/djdns/server"
 	"log"
+	"os"
 )
 
 func main() {
-	filename := "./model/demo.json"
-	log.Printf("Loading root page from %s", filename)
-	json, err := model.GetJSONFromFile(filename)
-	if err != nil {
-		log.Fatal(err)
+	root_alias := "./model/demo.json"
+	addr := "127.0.0.1:9953"
+	aliases := map[string]string{
+		"<ROOT>": root_alias,
 	}
 
-	addr := "127.0.0.1:9953"
+	logger := log.New(os.Stderr, "djdns: ", 0)
+
 	s := server.NewServer()
-	s.Root.LoadFrom(json)
-	log.Printf("Starting server on %s", addr)
-	err = s.Run(addr)
+	s.Logger = logger
+	s_aliases := s.PageGetter.(server.AliasPageGetter).Aliases
+	for k, v := range aliases {
+		s_aliases[k] = v
+	}
+
+	logger.Printf("Starting server on %s", addr)
+	err := s.Run(addr)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -14,15 +14,6 @@ func TestNewServer(t *testing.T) {
 	if s.Port != 9953 {
 		t.Fatalf("Expected port 9953, got %d", s.Port)
 	}
-	num_exp_branches := 0
-	num_branches := len(s.Root.Branches)
-	if num_branches != num_exp_branches {
-		t.Fatalf(
-			"Expected %d branches, got %d",
-			num_exp_branches,
-			num_branches,
-		)
-	}
 }
 
 type GetRecordsTest struct {
@@ -32,7 +23,10 @@ type GetRecordsTest struct {
 }
 
 func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
-	result := s.GetRecords(grt.Query)
+	result, err := s.GetRecords(grt.Query)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !reflect.DeepEqual(result, grt.Expected) {
 		t.Log(grt.Query)
 		t.Log(grt.Expected)
@@ -43,7 +37,8 @@ func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 
 func setupTestData() DjdnsServer {
 	s := NewServer()
-	s.Root.Branches = []model.Branch{
+	dpg := DummyPageGetter{}
+	dpg.PageData.Data.Branches = []model.Branch{
 		model.Branch{
 			Selector: "abc",
 			Records: []model.Record{
@@ -68,19 +63,21 @@ func setupTestData() DjdnsServer {
 			},
 		},
 	}
-	s.Root.Normalize()
+	dpg.PageData.Data.Normalize()
+	s.PageGetter = &dpg
 	return s
 }
 
 func Test_DjdnsServer_GetRecords(t *testing.T) {
 	// Setup
 	s := setupTestData()
+	dpg := s.PageGetter.(*DummyPageGetter)
 
 	// Actual tests
 	tests := []GetRecordsTest{
 		GetRecordsTest{
 			"abcde",
-			s.Root.Branches[0].Records,
+			dpg.PageData.Data.Branches[0].Records,
 			"Basic request",
 		},
 		GetRecordsTest{

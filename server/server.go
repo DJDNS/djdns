@@ -3,11 +3,13 @@ package server
 import (
 	"github.com/campadrenalin/djdns/model"
 	"github.com/miekg/dns"
+	"log"
 )
 
 type DjdnsServer struct {
-	Port int
-	Root model.Page
+	Port       int
+	PageGetter PageGetter
+	Logger     *log.Logger
 }
 
 // Initialize a DjdnsServer with default values.
@@ -15,18 +17,22 @@ type DjdnsServer struct {
 // This does not start service - you still need to call
 // DjdnsServer.Run(), possibly as a goroutine.
 func NewServer() DjdnsServer {
-	var server DjdnsServer
-	server.Port = 9953
-	return server
+	return DjdnsServer{
+		Port:       9953,
+		PageGetter: NewAliasPageGetter(NewFilePageGetter()),
+	}
 }
 
-// Returns nil slice, if no such branch.
-func (ds *DjdnsServer) GetRecords(q string) []model.Record {
-	branch := ds.Root.GetBranchForQuery(q)
+func (ds *DjdnsServer) GetRecords(q string) ([]model.Record, error) {
+	page, err := ds.PageGetter.GetPage("<ROOT>", nil)
+	if err != nil {
+		return nil, err
+	}
+	branch := page.Data.GetBranchForQuery(q)
 	if branch == nil {
-		return nil
+		return nil, nil
 	} else {
-		return branch.Records
+		return branch.Records, nil
 	}
 }
 
@@ -38,7 +44,10 @@ func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
 	if len(query.Question) > 0 {
 		// Ignore secondary questions
 		question := query.Question[0]
-		records := ds.GetRecords(question.Name)
+		records, err := ds.GetRecords(question.Name)
+		if err != nil {
+			return nil, err
+		}
 		response.Answer = make([]dns.RR, len(records))
 		for i, record := range records {
 			answer, err := record.ToDns()
@@ -57,6 +66,9 @@ func (ds *DjdnsServer) Handle(query *dns.Msg) (*dns.Msg, error) {
 func (ds *DjdnsServer) ServeDNS(rw dns.ResponseWriter, r *dns.Msg) {
 	response, err := ds.Handle(r)
 	if err != nil {
+		if ds.Logger != nil {
+			ds.Logger.Print(err)
+		}
 		response = new(dns.Msg)
 		response.SetRcode(r, dns.RcodeServerFailure)
 	}
