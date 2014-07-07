@@ -10,7 +10,8 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	s := NewServer()
+	spgc := NewStandardPGConfig()
+	s := NewServer(spgc.Alias)
 	if s.Port != 9953 {
 		t.Fatalf("Expected port 9953, got %d", s.Port)
 	}
@@ -36,7 +37,8 @@ func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 }
 
 func setupTestData() DjdnsServer {
-	s := NewServer()
+	spgc := NewStandardPGConfig()
+	s := NewServer(spgc.Alias)
 	dpg := DummyPageGetter{}
 	dpg.PageData.Data.Branches = []model.Branch{
 		model.Branch{

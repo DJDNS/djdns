@@ -16,10 +16,10 @@ type DjdnsServer struct {
 //
 // This does not start service - you still need to call
 // DjdnsServer.Run(), possibly as a goroutine.
-func NewServer() DjdnsServer {
+func NewServer(pg PageGetter) DjdnsServer {
 	return DjdnsServer{
 		Port:       9953,
-		PageGetter: NewAliasPageGetter(NewFilePageGetter()),
+		PageGetter: pg,
 	}
 }
 

@@ -40,3 +40,19 @@ func (fpg FilePageGetter) GetPage(url string, timeout Aborter) (Page, error) {
 	page.Data.LoadFrom(json)
 	return page, nil
 }
+
+type StandardPGConfig struct {
+	Alias  AliasPageGetter
+	File   FilePageGetter
+	Scheme SchemePageGetter
+}
+
+func NewStandardPGConfig() (spgc StandardPGConfig) {
+	spgc.File = NewFilePageGetter()
+	spgc.Scheme = NewSchemePageGetter()
+	spgc.Scheme.Children["file"] = spgc.File
+	spgc.Scheme.Children[""] = spgc.File
+	spgc.Alias = NewAliasPageGetter(spgc.Scheme)
+
+	return spgc
+}
