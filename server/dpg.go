@@ -13,8 +13,8 @@ func NewDejePageGetter() DejePageGetter {
 	return DejePageGetter{}
 }
 
-func (pg DejePageGetter) getRouterUrl(deje_url string) (string, error) {
-	// Handle schemeless URIs
+// Handle schemeless URIs
+func (pg DejePageGetter) unbareUrl(deje_url string) string {
 	valid_prefixes := []string{"http://", "https://", "ws://", "//"}
 	has_valid_prefix := false
 	for _, prefix := range valid_prefixes {
@@ -25,9 +25,11 @@ func (pg DejePageGetter) getRouterUrl(deje_url string) (string, error) {
 	if !has_valid_prefix {
 		deje_url = "ws://" + deje_url
 	}
+	return deje_url
+}
 
-	// Parse and fix up
-	url_obj, err := url.Parse(deje_url)
+func (pg DejePageGetter) getRouterUrl(deje_url string) (string, error) {
+	url_obj, err := url.Parse(pg.unbareUrl(deje_url))
 	if err != nil {
 		return "", err
 	}
