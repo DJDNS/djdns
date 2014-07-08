@@ -38,6 +38,18 @@ func (pg DejePageGetter) getRouterUrl(deje_url string) (string, error) {
 	return url_obj.String(), nil
 }
 
+func (pg DejePageGetter) getTopic(deje_url string) (string, error) {
+	url_obj, err := url.Parse(pg.unbareUrl(deje_url))
+	if err != nil {
+		return "", err
+	}
+	url_obj.Scheme = "deje"
+	if url_obj.Path == "" {
+		url_obj.Path = "/"
+	}
+	return url_obj.String(), nil
+}
+
 func (dpg DejePageGetter) GetPage(urlstr string, ab Aborter) (Page, error) {
 	return Page{}, nil
 }
