@@ -1,13 +1,16 @@
 package server
 
 import (
+	"log"
+	"time"
+
 	"github.com/campadrenalin/djdns/model"
 	"github.com/miekg/dns"
-	"log"
 )
 
 type DjdnsServer struct {
 	Port       int
+	Timeout    time.Duration
 	PageGetter PageGetter
 	Logger     *log.Logger
 }
@@ -19,12 +22,13 @@ type DjdnsServer struct {
 func NewServer(pg PageGetter) DjdnsServer {
 	return DjdnsServer{
 		Port:       9953,
+		Timeout:    1 * time.Second,
 		PageGetter: pg,
 	}
 }
 
 func (ds *DjdnsServer) GetRecords(q string) ([]model.Record, error) {
-	page, err := ds.PageGetter.GetPage("<ROOT>", nil)
+	page, err := ds.PageGetter.GetPage("<ROOT>", time.After(ds.Timeout))
 	if err != nil {
 		return nil, err
 	}

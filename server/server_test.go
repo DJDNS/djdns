@@ -2,15 +2,16 @@ package server
 
 import (
 	"fmt"
-	"github.com/campadrenalin/djdns/model"
-	"github.com/miekg/dns"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/campadrenalin/djdns/model"
+	"github.com/miekg/dns"
 )
 
 func TestNewServer(t *testing.T) {
-	spgc := NewStandardPGConfig()
+	spgc := NewStandardPGConfig(nil)
 	s := NewServer(spgc.Alias)
 	if s.Port != 9953 {
 		t.Fatalf("Expected port 9953, got %d", s.Port)
@@ -37,7 +38,7 @@ func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 }
 
 func setupTestData() DjdnsServer {
-	spgc := NewStandardPGConfig()
+	spgc := NewStandardPGConfig(nil)
 	s := NewServer(spgc.Alias)
 	dpg := DummyPageGetter{}
 	dpg.PageData.Data.Branches = []model.Branch{

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"io"
 	"time"
 
 	"github.com/campadrenalin/djdns/model"
@@ -46,14 +47,17 @@ func (fpg FilePageGetter) GetPage(url string, timeout Aborter) (Page, error) {
 type StandardPGConfig struct {
 	Alias  AliasPageGetter
 	File   FilePageGetter
+	Deje   DejePageGetter
 	Scheme SchemePageGetter
 }
 
-func NewStandardPGConfig() (spgc StandardPGConfig) {
+func NewStandardPGConfig(w io.Writer) (spgc StandardPGConfig) {
 	spgc.File = NewFilePageGetter()
+	spgc.Deje = NewDejePageGetter(w)
 	spgc.Scheme = NewSchemePageGetter()
 	spgc.Scheme.Children["file"] = spgc.File
 	spgc.Scheme.Children[""] = spgc.File
+	spgc.Scheme.Children["deje"] = spgc.Deje
 	spgc.Alias = NewAliasPageGetter(spgc.Scheme)
 
 	return spgc
