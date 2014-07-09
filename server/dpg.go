@@ -24,6 +24,7 @@ func NewDCD(c *deje.SimpleClient) *dejeClientData {
 		Waiting: true,
 		Waiter:  make(chan struct{}),
 	}
+	// TODO: Use better condition for "synced"
 	c.SetPrimitiveCallback(func(p deje_state.Primitive) {
 		if dcd.Waiting {
 			close(dcd.Waiter)
