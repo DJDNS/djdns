@@ -17,7 +17,7 @@ type UrlTest struct {
 }
 
 func TestDejePageGetter_getRouterUrl(t *testing.T) {
-	pg := NewDejePageGetter()
+	pg := NewDejePageGetter(nil)
 	tests := []UrlTest{
 		UrlTest{"http://foo/bar", "ws://foo/ws"},
 		UrlTest{"http://foo:8080", "ws://foo:8080/ws"},
@@ -43,7 +43,7 @@ func TestDejePageGetter_getRouterUrl(t *testing.T) {
 }
 
 func TestDejePageGetter_getTopic(t *testing.T) {
-	pg := NewDejePageGetter()
+	pg := NewDejePageGetter(nil)
 	tests := []UrlTest{
 		UrlTest{"http://foo/bar", "deje://foo/bar"},
 		UrlTest{"http://foo:8080", "deje://foo:8080/"},
@@ -95,15 +95,15 @@ func setup_deje_env(t *testing.T) (string, string, func(), *deje.SimpleClient, d
 }
 
 func TestDejePageGetter_getDoc(t *testing.T) {
-	pg := NewDejePageGetter()
+	pg := NewDejePageGetter(nil)
 	url, _, closer, _, _ := setup_deje_env(t)
 	defer closer()
 
-	doc, err := pg.getDoc(url, nil)
+	doc, err := pg.getDoc(url)
 	if err != nil {
 		t.Fatal(err)
 	}
-	doc2, err := pg.getDoc(url, nil)
+	doc2, err := pg.getDoc(url)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,19 +114,20 @@ func TestDejePageGetter_getDoc(t *testing.T) {
 }
 
 func TestDejePageGetter_getDoc_logging(t *testing.T) {
-	pg := NewDejePageGetter()
-	var buf *bytes.Buffer
+	buf := new(bytes.Buffer)
+	pg := NewDejePageGetter(buf)
 	url, topic, closer, _, dumb := setup_deje_env(t)
 	defer closer()
 
 	testLogging := func(deje_url string) {
 		t.Log(deje_url)
 
-		// Clear existing log
+		// Use fresh log, so hanger-on client has no access
 		buf = new(bytes.Buffer)
+		pg.writer = buf
 
 		// Create client, wait for it to connect
-		_, err := pg.getDoc(deje_url, buf)
+		_, err := pg.getDoc(deje_url)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -148,5 +149,54 @@ func TestDejePageGetter_getDoc_logging(t *testing.T) {
 	// Ensure that both are parseable
 	testLogging(url)
 	testLogging(topic)
+}
 
+func TestDejePageGetter_GetPage_Abort(t *testing.T) {
+	pg := NewDejePageGetter(nil)
+	url, _, closer, _, _ := setup_deje_env(t)
+	defer closer()
+
+	ab := time.After(0)
+	_, err := pg.GetPage(url, ab)
+	if err == nil {
+		t.Fatal("Should have failed due to timeout")
+	}
+
+	expected_error := "DEJE sync timed out"
+	got_error := err.Error()
+	if got_error != expected_error {
+		t.Fatalf("Expected '%s', got '%s'", expected_error, got_error)
+	}
+}
+
+func TestDejePageGetter_GetPage(t *testing.T) {
+	buf := new(bytes.Buffer)
+	pg := NewDejePageGetter(buf)
+	url, _, closer, clever, _ := setup_deje_env(t)
+	defer closer()
+
+	// Set up event
+	doc := clever.GetDoc()
+	event := doc.NewEvent("SET")
+	event.Arguments["path"] = []interface{}{}
+	event.Arguments["value"] = map[string]interface{}{
+		"meta": map[string]interface{}{
+			"authority": "Example Authority",
+		},
+	}
+	event.Register()
+	clever.Promote(event)
+
+	ab := time.After(50 * time.Millisecond)
+	page, err := pg.GetPage(url, ab)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got_auth := page.Data.Meta.Authority
+	exp_auth := "Example Authority"
+	if got_auth != exp_auth {
+		t.Error("Data was not synced from remote host")
+		t.Error(page)
+	}
 }

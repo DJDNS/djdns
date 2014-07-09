@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"io"
 	"log"
 	"net/url"
@@ -8,16 +9,40 @@ import (
 
 	deje "github.com/campadrenalin/go-deje"
 	deje_doc "github.com/campadrenalin/go-deje/document"
+	deje_state "github.com/campadrenalin/go-deje/state"
 )
+
+type dejeClientData struct {
+	Client  *deje.SimpleClient
+	Waiting bool
+	Waiter  chan struct{}
+}
+
+func NewDCD(c *deje.SimpleClient) *dejeClientData {
+	dcd := &dejeClientData{
+		Client:  c,
+		Waiting: true,
+		Waiter:  make(chan struct{}),
+	}
+	c.SetPrimitiveCallback(func(p deje_state.Primitive) {
+		if dcd.Waiting {
+			close(dcd.Waiter)
+			dcd.Waiting = false
+		}
+	})
+	return dcd
+}
 
 // Retrieves DEJE documents, and uses their content
 type DejePageGetter struct {
-	clients map[string]*deje.SimpleClient
+	clients map[string]*dejeClientData
+	writer  io.Writer
 }
 
-func NewDejePageGetter() DejePageGetter {
+func NewDejePageGetter(w io.Writer) DejePageGetter {
 	return DejePageGetter{
-		clients: make(map[string]*deje.SimpleClient),
+		clients: make(map[string]*dejeClientData),
+		writer:  w,
 	}
 }
 
@@ -58,8 +83,8 @@ func (pg DejePageGetter) getTopic(deje_url string) (string, error) {
 	return url_obj.String(), nil
 }
 
-func (pg DejePageGetter) getDoc(deje_url string, w io.Writer) (*deje_doc.Document, error) {
-	client, ok := pg.clients[deje_url]
+func (pg DejePageGetter) getDoc(deje_url string) (*deje_doc.Document, error) {
+	dcd, ok := pg.clients[deje_url]
 	if !ok {
 		ws_url, err := pg.getRouterUrl(deje_url)
 		if err != nil {
@@ -72,21 +97,39 @@ func (pg DejePageGetter) getDoc(deje_url string, w io.Writer) (*deje_doc.Documen
 		}
 
 		var logger *log.Logger
-		if w != nil {
-			logger = log.New(w, "client '"+deje_url+"': ", 0)
+		if pg.writer != nil {
+			logger = log.New(pg.writer, "client '"+deje_url+"': ", 0)
 		}
 
-		client = deje.NewSimpleClient(topic, logger)
+		client := deje.NewSimpleClient(topic, logger)
 		err = client.Connect(ws_url)
 		if err != nil {
 			return nil, err
 		}
 
-		pg.clients[deje_url] = client
+		dcd = NewDCD(client)
+		pg.clients[deje_url] = dcd
 	}
-	return client.GetDoc(), nil
+	return dcd.Client.GetDoc(), nil
 }
 
-func (dpg DejePageGetter) GetPage(urlstr string, ab Aborter) (Page, error) {
-	return Page{}, nil
+func (pg DejePageGetter) GetPage(urlstr string, ab Aborter) (Page, error) {
+	doc, err := pg.getDoc(urlstr)
+	if err != nil {
+		return Page{}, err
+	}
+
+	// We know this exists - we just ensured it with getDoc
+	dcd := pg.clients[urlstr]
+
+	select {
+	case <-ab:
+		return Page{}, errors.New("DEJE sync timed out")
+	case <-dcd.Waiter:
+		page := Page{
+			Url: urlstr,
+		}
+		err = page.Data.LoadFrom(doc.State.Export())
+		return page, err
+	}
 }

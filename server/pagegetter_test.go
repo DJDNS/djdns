@@ -5,7 +5,7 @@ import "testing"
 func TestFilePageGetter_GetPage(t *testing.T) {
 	pg := NewFilePageGetter()
 	filename := "../model/demo.json"
-	page, err := pg.GetPage(filename, make(chan interface{}))
+	page, err := pg.GetPage(filename, make(Aborter))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestFilePageGetter_GetPage(t *testing.T) {
 func TestFilePageGetter_GetPage_NoSuchFile(t *testing.T) {
 	pg := NewFilePageGetter()
 	filename := "../model/nosuchfile.json"
-	_, err := pg.GetPage(filename, make(chan interface{}))
+	_, err := pg.GetPage(filename, make(Aborter))
 	if err == nil {
 		t.Fatal("Should have announced failure")
 	}

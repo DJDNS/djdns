@@ -42,7 +42,7 @@ func setup() SchemePageGetter {
 
 func TestSchemePageGetter_GetPage(t *testing.T) {
 	pg := setup()
-	ab := make(chan interface{})
+	ab := make(Aborter)
 	url := "dummy1://whatever"
 	page, err := pg.GetPage(url, ab)
 	if err != nil {

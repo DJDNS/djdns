@@ -1,10 +1,12 @@
 package server
 
 import (
+	"time"
+
 	"github.com/campadrenalin/djdns/model"
 )
 
-type Aborter chan interface{}
+type Aborter <-chan time.Time
 
 type PageGetter interface {
 	GetPage(url string, timeout Aborter) (Page, error)

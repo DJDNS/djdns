@@ -46,14 +46,14 @@ func check_apg(t *testing.T, apg AliasPageGetter, url, exp_url string, ab Aborte
 
 func TestAliasPageGetter_GetPage_HasAlias(t *testing.T) {
 	pg := setup_apg()
-	ab := make(chan interface{})
+	ab := make(Aborter)
 	url := "<FOO>"
 	check_apg(t, pg, url, "bar", ab)
 }
 
 func TestAliasPageGetter_GetPage_NoAlias(t *testing.T) {
 	pg := setup_apg()
-	ab := make(chan interface{})
+	ab := make(Aborter)
 	url := "Bazzerific"
 	check_apg(t, pg, url, url, ab)
 }
