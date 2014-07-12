@@ -1,7 +1,7 @@
 package model
 
 //import "github.com/miekg/dns"
-import djutil "github.com/campadrenalin/go-deje/util"
+import djutil "github.com/DJDNS/go-deje/util"
 
 type Page struct {
 	Meta     PageMeta

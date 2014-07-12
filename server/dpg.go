@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strings"
 
-	deje "github.com/campadrenalin/go-deje"
-	deje_doc "github.com/campadrenalin/go-deje/document"
-	deje_state "github.com/campadrenalin/go-deje/state"
+	deje "github.com/DJDNS/go-deje"
+	deje_doc "github.com/DJDNS/go-deje/document"
+	deje_state "github.com/DJDNS/go-deje/state"
 )
 
 type dejeClientData struct {

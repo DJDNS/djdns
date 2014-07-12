@@ -4,7 +4,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/campadrenalin/djdns/model"
+	"github.com/DJDNS/djdns/model"
 )
 
 type Aborter <-chan time.Time

@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/campadrenalin/djdns/model"
+	"github.com/DJDNS/djdns/model"
 	"github.com/miekg/dns"
 )
 

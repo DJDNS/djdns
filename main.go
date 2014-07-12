@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/campadrenalin/djdns/server"
+	"github.com/DJDNS/djdns/server"
 )
 
 func main() {

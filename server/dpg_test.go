@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/campadrenalin/go-deje"
+	"github.com/DJDNS/go-deje"
 	"github.com/jcelliott/turnpike"
 )
 
