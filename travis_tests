@@ -1,0 +1,16 @@
+#!/bin/bash -ex
+
+# fmt
+go fmt ./...
+if [[ "$(git status --porcelain | tee /dev/stderr | wc -l)" -ne 0 ]]; then
+    echo "Files differ after running go fmt" > /dev/stderr
+    exit 1
+fi
+
+go test -v ./...
+
+# cover
+test $(go test -cover ./... | grep -v 100% | tee /dev/stderr | wc -l) -eq 0
+
+# race
+go test -race ./...
