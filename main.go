@@ -23,6 +23,7 @@ func main() {
 	s.Logger = logger
 
 	logger.Printf("Starting server on %s", addr)
+	logger.Printf("<ROOT> is '%s'", root_alias)
 	err := s.Run(addr)
 	if err != nil {
 		log.Fatal(err)
