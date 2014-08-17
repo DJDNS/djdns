@@ -36,12 +36,15 @@ This will install djdns to your PATH (assuming you have your Go env and PATH set
 
 ```bash
 go install github.com/DJDNS/go-deje/djconvert
-djconvert --pretty up $GOPATH/pkg/github.com/DJDNS/djdns/model/demo.json dns.json
+djconvert --pretty up $GOPATH/src/github.com/DJDNS/djdns/model/demo.json dns.json
 go install github.com/DJDNS/go-deje/demo/router
 go install github.com/DJDNS/go-deje/demo/client
 
-router # In one terminal
-client --file dns.json --topic deje://localhost:8080/root # in another
+# In this terminal
+client --file dns.json --topic deje://localhost:8080/root
+
+# In another terminal
+router
 ```
 
 Now we've got a DEJE router running, and a client with DJDNS data available on the router, subscribed to the same topic that DJDNS uses.
