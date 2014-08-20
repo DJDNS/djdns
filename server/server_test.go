@@ -40,6 +40,7 @@ func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 func setupTestData() (DjdnsServer, StandardPGConfig) {
 	spgc := NewStandardPGConfig(nil)
 	s := NewServer(spgc.Alias)
+
 	root := DummyPageGetter{}
 	root.PageData.Data.Branches = []model.Branch{
 		model.Branch{
@@ -67,9 +68,25 @@ func setupTestData() (DjdnsServer, StandardPGConfig) {
 		},
 	}
 	root.PageData.Data.Normalize()
+
+	secondary := DummyPageGetter{}
+	secondary.PageData.Data.Branches = []model.Branch{
+		model.Branch{
+			Selector: "dogbreath",
+			Records: []model.Record{
+				model.Record{
+					DomainName: "only.smells",
+					Rdata:      "3.3.3.3",
+				},
+			},
+		},
+	}
+	secondary.PageData.Data.Normalize()
+
 	spgc.Alias.Aliases["<ROOT>"] = "root://"
 	spgc.Alias.Aliases["secondary"] = "secondary://"
 	spgc.Scheme.Children["root"] = &root
+	spgc.Scheme.Children["secondary"] = &secondary
 	return s, spgc
 }
 
