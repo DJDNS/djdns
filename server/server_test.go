@@ -93,19 +93,25 @@ func setupTestData() (DjdnsServer, StandardPGConfig) {
 func Test_DjdnsServer_GetRecords(t *testing.T) {
 	// Setup
 	s, pg_config := setupTestData()
-	dpg := pg_config.Scheme.Children["root"].(*DummyPageGetter)
+	root := pg_config.Scheme.Children["root"].(*DummyPageGetter)
+	secondary := pg_config.Scheme.Children["secondary"].(*DummyPageGetter)
 
 	// Actual tests
 	tests := []GetRecordsTest{
 		GetRecordsTest{
 			"abcde",
-			dpg.PageData.Data.Branches[0].Records,
+			root.PageData.Data.Branches[0].Records,
 			"Basic request",
 		},
 		GetRecordsTest{
 			"no such branch",
 			nil,
 			"Branch does not exist",
+		},
+		GetRecordsTest{
+			"dogbreath.de",
+			secondary.PageData.Data.Branches[0].Records,
+			"Recursive request",
 		},
 	}
 	for i := range tests {
