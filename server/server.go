@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -28,16 +29,39 @@ func NewServer(pg PageGetter) DjdnsServer {
 }
 
 func (ds *DjdnsServer) GetRecords(q string) ([]model.Record, error) {
-	page, err := ds.PageGetter.GetPage("<ROOT>", time.After(ds.Timeout))
+	return ds.getRecordsAttempt(q, "<ROOT>", time.After(ds.Timeout))
+}
+
+func (ds *DjdnsServer) getRecordsAttempt(q, url string, ab Aborter) ([]model.Record, error) {
+	// Check if already aborted
+	select {
+	case <-ab:
+		return nil, errors.New("Timed out")
+	default:
+		// Do nothing - don't block on ab, idjit ;)
+	}
+
+	// Attempt to get page and branch
+	page, err := ds.PageGetter.GetPage(url, ab)
 	if err != nil {
 		return nil, err
 	}
 	branch := page.Data.GetBranchForQuery(q)
 	if branch == nil {
-		return nil, nil
-	} else {
-		return branch.Records, nil
+		return nil, nil // No branch found
 	}
+
+	// Check for targets
+	if len(branch.Targets) > 0 {
+		// TODO: Handle multi-target
+		for _, target := range branch.Targets {
+			return ds.getRecordsAttempt(q, target, ab)
+		}
+	}
+
+	// No special cases triggered, just return (possibly empty)
+	// record set
+	return branch.Records, nil
 }
 
 // Construct a response for a single DNS request.

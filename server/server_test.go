@@ -66,6 +66,10 @@ func setupTestData() (DjdnsServer, StandardPGConfig) {
 				},
 			},
 		},
+		model.Branch{
+			Selector: "dog*",
+			Targets:  []string{"secondary://"},
+		},
 	}
 	root.PageData.Data.Normalize()
 
