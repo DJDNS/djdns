@@ -37,11 +37,11 @@ func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 	}
 }
 
-func setupTestData() DjdnsServer {
+func setupTestData() (DjdnsServer, StandardPGConfig) {
 	spgc := NewStandardPGConfig(nil)
 	s := NewServer(spgc.Alias)
-	dpg := DummyPageGetter{}
-	dpg.PageData.Data.Branches = []model.Branch{
+	root := DummyPageGetter{}
+	root.PageData.Data.Branches = []model.Branch{
 		model.Branch{
 			Selector: "abc",
 			Records: []model.Record{
@@ -66,15 +66,17 @@ func setupTestData() DjdnsServer {
 			},
 		},
 	}
-	dpg.PageData.Data.Normalize()
-	s.PageGetter = &dpg
-	return s
+	root.PageData.Data.Normalize()
+	spgc.Alias.Aliases["<ROOT>"] = "root://"
+	spgc.Alias.Aliases["secondary"] = "secondary://"
+	spgc.Scheme.Children["root"] = &root
+	return s, spgc
 }
 
 func Test_DjdnsServer_GetRecords(t *testing.T) {
 	// Setup
-	s := setupTestData()
-	dpg := s.PageGetter.(*DummyPageGetter)
+	s, pg_config := setupTestData()
+	dpg := pg_config.Scheme.Children["root"].(*DummyPageGetter)
 
 	// Actual tests
 	tests := []GetRecordsTest{
@@ -260,7 +262,7 @@ var resolve_tests = []ResolveTest{
 }
 
 func Test_DjdnsServer_Handle(t *testing.T) {
-	s := setupTestData()
+	s, _ := setupTestData()
 	tester := RTForHandle{s}
 	for _, test := range resolve_tests {
 		testResolution(t, tester, test)
@@ -268,7 +270,7 @@ func Test_DjdnsServer_Handle(t *testing.T) {
 }
 
 func Test_DjdnsServer_Run(t *testing.T) {
-	s := setupTestData()
+	s, _ := setupTestData()
 	host, port := "127.0.0.1", 9953
 	addr := fmt.Sprintf("%s:%d", host, port)
 
