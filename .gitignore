@@ -24,3 +24,6 @@ _testmain.go
 
 # Vim swp backups
 *.swp
+
+# Testing
+coverage.out

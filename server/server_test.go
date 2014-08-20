@@ -286,6 +286,16 @@ var resolve_tests = []ResolveTest{
 		},
 		ShouldFail: true,
 	},
+	ResolveTest{
+		Description: "Recursion",
+		QuestionSection: []dns.Question{
+			dns.Question{
+				"dogbreath.de.", dns.TypeA, dns.ClassINET},
+		},
+		ExpectedAnswers: []string{
+			"only.smells. A 3.3.3.3",
+		},
+	},
 }
 
 func Test_DjdnsServer_Handle(t *testing.T) {
