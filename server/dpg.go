@@ -14,6 +14,7 @@ type dejeClientData struct {
 	Client  *deje.SimpleClient
 	Waiting bool
 	Waiter  chan struct{}
+	LastTip string
 }
 
 func NewDCD(c *deje.SimpleClient) *dejeClientData {
@@ -28,10 +29,16 @@ func NewDCD(c *deje.SimpleClient) *dejeClientData {
 			close(dcd.Waiter)
 			dcd.Waiting = false
 		}
+
+		var tipstr string
 		if c.Tip != nil {
-			c.Log("Tip is " + c.Tip.Hash())
+			tipstr = c.Tip.Hash()
 		} else {
-			c.Log("Tip is nil")
+			tipstr = "nil"
+		}
+		if tipstr != dcd.LastTip {
+			c.Log("Tip is " + tipstr)
+			dcd.LastTip = tipstr
 		}
 	})
 	return dcd
