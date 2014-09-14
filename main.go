@@ -37,7 +37,7 @@ func main() {
 	log_writer := PeerWriter{os.Stderr, peer_writer_client}
 	logger := log.New(log_writer, "djdns: ", 0)
 
-	spgc := server.NewStandardPGConfig(os.Stderr)
+	spgc := server.NewStandardPGConfig(log_writer)
 	spgc.Alias.Aliases = map[string]string{
 		"<ROOT>": *root_alias,
 	}

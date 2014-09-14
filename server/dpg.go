@@ -28,6 +28,11 @@ func NewDCD(c *deje.SimpleClient) *dejeClientData {
 			close(dcd.Waiter)
 			dcd.Waiting = false
 		}
+		if c.Tip != nil {
+			c.Log("Tip is " + c.Tip.Hash())
+		} else {
+			c.Log("Tip is nil")
+		}
 	})
 	return dcd
 }
