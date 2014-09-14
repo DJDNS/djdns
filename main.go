@@ -28,7 +28,7 @@ func (pl PeerWriter) Write(p []byte) (n int, err error) {
 
 func main() {
 	flag.Parse()
-	addr := "127.0.0.1:9953"
+	addr := "0.0.0.0:9953"
 
 	peer_writer_client, err := deje.Open(*root_alias, nil, nil)
 	if err != nil {
