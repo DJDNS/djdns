@@ -86,7 +86,9 @@ func TestDejePageGetter_getDoc_logging(t *testing.T) {
 	}
 	<-time.After(50 * time.Millisecond)
 
-	expected_log := "client '" + topic + "': Non-{} message\n"
+	heading := "client '" + topic + "': "
+	expected_log := heading + "Tip is nil\n" +
+		heading + "Non-{} message\n"
 	got_log := buf.String()
 	if got_log != expected_log {
 		t.Fatalf("Log content was wrong.\nexp: '%s'\ngot: '%s'", expected_log, got_log)

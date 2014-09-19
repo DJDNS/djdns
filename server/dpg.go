@@ -29,17 +29,16 @@ func NewDCD(c *deje.SimpleClient) *dejeClientData {
 			close(dcd.Waiter)
 			dcd.Waiting = false
 		}
+	})
 
+	c.SetRetipCallback(func(tip *deje_doc.Event) {
 		var tipstr string
-		if c.Tip != nil {
-			tipstr = c.Tip.Hash()
+		if tip != nil {
+			tipstr = tip.Hash()
 		} else {
 			tipstr = "nil"
 		}
-		if tipstr != dcd.LastTip {
-			c.Log("Tip is " + tipstr)
-			dcd.LastTip = tipstr
-		}
+		c.Log("Tip is " + tipstr)
 	})
 	return dcd
 }
