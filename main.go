@@ -15,7 +15,7 @@ var root_alias = flag.String("root", "deje://localhost:8080/root", "Target URL t
 
 type PeerWriter struct {
 	RealWriter io.Writer
-	Client     *deje.SimpleClient
+	Client     *deje.Client
 }
 
 func (pl PeerWriter) Write(p []byte) (n int, err error) {
@@ -26,11 +26,20 @@ func (pl PeerWriter) Write(p []byte) (n int, err error) {
 	return pl.RealWriter.Write(p)
 }
 
+func getLoggingClient(url string) (*deje.Client, error) {
+	router, topic, err := deje.GetRouterAndTopic(url)
+	if err != nil {
+		return nil, err
+	}
+	client := deje.NewClient(topic)
+	return &client, client.Connect(router)
+}
+
 func main() {
 	flag.Parse()
 	addr := "0.0.0.0:9953"
 
-	peer_writer_client, err := deje.Open(*root_alias, nil, nil)
+	peer_writer_client, err := getLoggingClient(*root_alias)
 	if err != nil {
 		log.Fatal(err)
 	}
