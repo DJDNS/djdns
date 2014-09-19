@@ -15,14 +15,19 @@ var root_alias = flag.String("root", "deje://localhost:8080/root", "Target URL t
 
 type PeerWriter struct {
 	RealWriter io.Writer
+	Hostname   string
 	Client     *deje.Client
 }
 
 func (pl PeerWriter) Write(p []byte) (n int, err error) {
-	pl.Client.Publish(map[string]interface{}{
+	data := map[string]interface{}{
 		"type":  "log",
 		"value": string(p),
-	})
+	}
+	if pl.Hostname != "" {
+		data["host"] = pl.Hostname
+	}
+	pl.Client.Publish(data)
 	return pl.RealWriter.Write(p)
 }
 
@@ -43,7 +48,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log_writer := PeerWriter{os.Stderr, peer_writer_client}
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Printf("Hostname detection failed: %v\n", err)
+		hostname = ""
+	}
+	log_writer := PeerWriter{os.Stderr, hostname, peer_writer_client}
 	logger := log.New(log_writer, "djdns: ", 0)
 
 	spgc := server.NewStandardPGConfig(log_writer)
