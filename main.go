@@ -12,6 +12,7 @@ import (
 )
 
 var root_alias = flag.String("root", "deje://localhost:8080/root", "Target URL to serve as <ROOT>")
+var display_name = flag.String("display-name", "", "Hostname to provide in network log messages")
 
 type PeerWriter struct {
 	RealWriter io.Writer
@@ -45,10 +46,13 @@ func makePeerWriter(url string) (PeerWriter, error) {
 	if err != nil {
 		return PeerWriter{}, err
 	}
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Printf("Hostname detection failed: %v\n", err)
-		hostname = ""
+	hostname := *display_name
+	if hostname == "" {
+		hostname, err = os.Hostname()
+		if err != nil {
+			log.Printf("Hostname detection failed: %v\n", err)
+			hostname = ""
+		}
 	}
 	return PeerWriter{os.Stderr, hostname, peer_writer_client}, nil
 }
