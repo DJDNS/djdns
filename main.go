@@ -40,20 +40,30 @@ func getLoggingClient(url string) (*deje.Client, error) {
 	return &client, client.Connect(router)
 }
 
-func main() {
-	flag.Parse()
-	addr := "0.0.0.0:9953"
-
-	peer_writer_client, err := getLoggingClient(*root_alias)
+func makePeerWriter(url string) (PeerWriter, error) {
+	peer_writer_client, err := getLoggingClient(url)
 	if err != nil {
-		log.Fatal(err)
+		return PeerWriter{}, err
 	}
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Printf("Hostname detection failed: %v\n", err)
 		hostname = ""
 	}
-	log_writer := PeerWriter{os.Stderr, hostname, peer_writer_client}
+	return PeerWriter{os.Stderr, hostname, peer_writer_client}, nil
+}
+
+func main() {
+	flag.Parse()
+	addr := "0.0.0.0:9953"
+
+	var log_writer io.Writer
+	var err error
+	log_writer, err = makePeerWriter(*root_alias)
+	if err != nil {
+		log.Printf("No network logging: %v\n", err)
+		log_writer = os.Stderr
+	}
 	logger := log.New(log_writer, "djdns: ", 0)
 
 	spgc := server.NewStandardPGConfig(log_writer)
