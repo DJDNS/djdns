@@ -2,17 +2,29 @@ package main
 
 //import "flag"
 import (
-	"flag"
 	"io"
 	"log"
 	"os"
 
 	"github.com/DJDNS/djdns/server"
 	"github.com/DJDNS/go-deje"
+	"github.com/docopt/docopt-go"
 )
 
-var root_alias = flag.String("root", "deje://localhost:8080/root", "Target URL to serve as <ROOT>")
-var display_name = flag.String("display-name", "", "Hostname to provide in network log messages")
+var version = "djdns 0.0.12"
+var usage = `djdns
+
+Usage:
+    djdns [ --root=<root> ] [ --display-name=<name> ]
+    djdns -h | --help
+    djdns --version
+
+Options:
+    --root=<root>         Target URL to serve as <ROOT> [default: deje://localhost:8080/root]
+    --display-name=<name> Hostname to provide in network log messages.
+    -h --help             Show this message.
+    --version             Print the version number.
+`
 
 type PeerWriter struct {
 	RealWriter io.Writer
@@ -41,12 +53,12 @@ func getLoggingClient(url string) (*deje.Client, error) {
 	return &client, client.Connect(router)
 }
 
-func makePeerWriter(url string) (PeerWriter, error) {
+func makePeerWriter(url, display_name string) (PeerWriter, error) {
 	peer_writer_client, err := getLoggingClient(url)
 	if err != nil {
 		return PeerWriter{}, err
 	}
-	hostname := *display_name
+	hostname := display_name
 	if hostname == "" {
 		hostname, err = os.Hostname()
 		if err != nil {
@@ -57,13 +69,27 @@ func makePeerWriter(url string) (PeerWriter, error) {
 	return PeerWriter{os.Stderr, hostname, peer_writer_client}, nil
 }
 
+func getShellArg(arguments map[string]interface{}, key string) string {
+	arg := arguments[key]
+	if arg == nil {
+		return ""
+	} else {
+		return arg.(string)
+	}
+}
+
 func main() {
-	flag.Parse()
+	arguments, err := docopt.Parse(usage, nil, true, version, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	root_alias := getShellArg(arguments, "--root")
+	display_name := getShellArg(arguments, "--display-name")
 	addr := "0.0.0.0:9953"
 
 	var log_writer io.Writer
-	var err error
-	log_writer, err = makePeerWriter(*root_alias)
+	log_writer, err = makePeerWriter(root_alias, display_name)
 	if err != nil {
 		log.Printf("No network logging: %v\n", err)
 		log_writer = os.Stderr
@@ -72,14 +98,14 @@ func main() {
 
 	spgc := server.NewStandardPGConfig(log_writer)
 	spgc.Alias.Aliases = map[string]string{
-		"<ROOT>": *root_alias,
+		"<ROOT>": root_alias,
 	}
 
 	s := server.NewServer(spgc.Alias)
 	s.Logger = logger
 
 	logger.Printf("Starting server on %s", addr)
-	logger.Printf("<ROOT> is '%s'", *root_alias)
+	logger.Printf("<ROOT> is '%s'", root_alias)
 	err = s.Run(addr)
 	if err != nil {
 		log.Fatal(err)
