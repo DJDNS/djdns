@@ -1,6 +1,7 @@
 package app
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,7 @@ func TestParse(t *testing.T) {
 				HostAddress: "0.0.0.0:9953",
 				DisplayName: "",
 				RootAlias:   "deje://localhost:8080/root",
+				ErrorWriter: os.Stderr,
 			},
 			"",
 		},
@@ -29,6 +31,7 @@ func TestParse(t *testing.T) {
 				HostAddress: "foo",
 				DisplayName: "bar",
 				RootAlias:   "deje://localhost:8080/root",
+				ErrorWriter: os.Stderr,
 			},
 			"",
 		},

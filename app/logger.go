@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -13,32 +14,35 @@ import (
 type PeerWriter struct {
 	RealWriter io.Writer
 	Hostname   string
-	Client     *deje.Client
+	Client     Publisher // DEJE client or compatible API
 }
 
 func NewPeerWriter(conf ServerConfig) PeerWriter {
+	var logger = log.New(conf.ErrorWriter, "djdns: ", 0)
+
 	peer_writer_client, err := getLoggingClient(conf.RootAlias)
 	if err != nil {
 		// It's fine for peer_writer_client to be nil.
 		// We just need to make sure the error gets printed non-fatally.
-		log.Printf("No network logging: %v\n", err)
+		logger.Printf("No network logging: %v\n", err)
 		peer_writer_client = nil // ensure this, trust no one
 	}
 	hostname := conf.DisplayName
 	if hostname == "" {
-		hostname, err = os.Hostname()
+		hostname, err = getHostname()
 		if err != nil {
-			log.Printf("Hostname detection failed: %v\n", err)
+			logger.Printf("Hostname detection failed: %v\n", err)
 			hostname = ""
 		}
 	}
-	return PeerWriter{os.Stderr, hostname, peer_writer_client}
+	return PeerWriter{conf.ErrorWriter, hostname, peer_writer_client}
 }
 
 func (pl PeerWriter) Write(p []byte) (n int, err error) {
 	if err = pl.writeToNetwork(p); err != nil {
 		// Don't crash, just fall back to simpler logger
-		log.Println(err)
+		var logger = log.New(pl.RealWriter, "djdns: ", 0)
+		logger.Println(err)
 	}
 	return pl.RealWriter.Write(p)
 }
@@ -62,6 +66,10 @@ func (pl PeerWriter) writeToNetwork(p []byte) error {
 
 // ------------------------------------------------
 
+type Publisher interface {
+	Publish(interface{}) error
+}
+
 func getLoggingClient(url string) (*deje.Client, error) {
 	router, topic, err := deje.GetRouterAndTopic(url)
 	if err != nil {
@@ -69,4 +77,14 @@ func getLoggingClient(url string) (*deje.Client, error) {
 	}
 	client := deje.NewClient(topic)
 	return &client, client.Connect(router)
+}
+
+var getHostnameShouldFail = false
+
+func getHostname() (string, error) {
+	if getHostnameShouldFail {
+		return "", errors.New("Error for testing purposes")
+	} else {
+		return os.Hostname()
+	}
 }

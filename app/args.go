@@ -1,6 +1,11 @@
 package app
 
-import "github.com/docopt/docopt-go"
+import (
+	"io"
+	"os"
+
+	"github.com/docopt/docopt-go"
+)
 
 var version = "djdns 0.0.12"
 var usage = `Usage: djdns [options]
@@ -26,6 +31,8 @@ type ServerConfig struct {
 	HostAddress string
 	DisplayName string
 	RootAlias   string
+
+	ErrorWriter io.Writer
 }
 
 // Parse a list of arguments into a config struct.
@@ -41,6 +48,8 @@ func Parse(argv []string, exit bool) (ServerConfig, error) {
 	conf.HostAddress = argToString(arguments, "--addr")
 	conf.DisplayName = argToString(arguments, "--display-name")
 	conf.RootAlias = argToString(arguments, "--root")
+
+	conf.ErrorWriter = os.Stderr
 
 	return conf, nil
 }
