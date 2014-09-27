@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/DJDNS/djdns/app"
 )
 
 func main() {
-	if err := app.Main(nil, true); err != nil {
-		log.Fatal(err)
-	}
+	app.Main(nil, true, os.Stderr)
 }

@@ -36,5 +36,27 @@ func TestSetupServer(t *testing.T) {
 }
 
 func TestMain(t *testing.T) {
-	// TODO
+	tests := []struct {
+		Argv           []string
+		ExpectedOutput string
+	}{
+		// Bad argument structure
+		{
+			[]string{"--addr"},
+			"djdns: --addr requires argument\n",
+		},
+		// Unhostable address
+		{
+			[]string{"--addr", "9.9.9.9:13"},
+			"djdns: Starting server on 9.9.9.9:13" +
+				"\ndjdns: <ROOT> is 'deje://localhost:8080/root'" +
+				"\ndjdns: listen udp 9.9.9.9:13: bind: cannot assign requested address\n",
+		},
+		// TODO: Test success, when we can do so without starting an unkillable goroutine
+	}
+	for _, test := range tests {
+		buf := new(bytes.Buffer)
+		Main(test.Argv, false, buf)
+		assert.Equal(t, test.ExpectedOutput, buf.String())
+	}
 }

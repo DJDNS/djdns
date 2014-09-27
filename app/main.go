@@ -1,6 +1,7 @@
 package app
 
 import (
+	"io"
 	"log"
 
 	"github.com/DJDNS/djdns/server"
@@ -21,15 +22,19 @@ func setupServer(conf ServerConfig) (*log.Logger, server.DjdnsServer) {
 	return logger, s
 }
 
-func Main(argv []string, exit bool) error {
+func Main(argv []string, exit bool, debug_writer io.Writer) {
 	conf, err := Parse(argv, exit)
 	if err != nil {
-		return err
+		log.New(debug_writer, "djdns: ", 0).Println(err)
+		return
 	}
 
+	conf.ErrorWriter = debug_writer
 	logger, s := setupServer(conf)
 
 	logger.Printf("Starting server on %s", conf.HostAddress)
 	logger.Printf("<ROOT> is '%s'", conf.RootAlias)
-	return s.Run(conf.HostAddress)
+	if err := s.Run(conf.HostAddress); err != nil {
+		logger.Println(err)
+	}
 }
