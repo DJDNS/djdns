@@ -18,38 +18,43 @@ type PeerWriter struct {
 }
 
 func NewPeerWriter(conf ServerConfig) PeerWriter {
-	var logger = log.New(conf.ErrorWriter, "djdns: ", 0)
+	pw := PeerWriter{conf.ErrorWriter, conf.DisplayName, nil}
+	logger := pw.GetLogger()
+	var err error
 
-	peer_writer_client, err := getLoggingClient(conf.RootAlias)
+	pw.Client, err = getLoggingClient(conf.RootAlias)
 	if err != nil {
 		// It's fine for peer_writer_client to be nil.
 		// We just need to make sure the error gets printed non-fatally.
 		logger.Printf("No network logging: %v\n", err)
-		peer_writer_client = nil // ensure this, trust no one
+		pw.Client = nil // ensure this, trust no one
 	}
-	hostname := conf.DisplayName
-	if hostname == "" {
-		hostname, err = getHostname()
+	if pw.Hostname == "" {
+		pw.Hostname, err = getHostname()
 		if err != nil {
 			logger.Printf("Hostname detection failed: %v\n", err)
-			hostname = ""
+			pw.Hostname = ""
 		}
 	}
-	return PeerWriter{conf.ErrorWriter, hostname, peer_writer_client}
+
+	return pw
 }
 
-func (pl PeerWriter) Write(p []byte) (n int, err error) {
-	if err = pl.writeToNetwork(p); err != nil {
+func (pw PeerWriter) GetLogger() *log.Logger {
+	return log.New(pw.RealWriter, "djdns: ", 0)
+}
+
+func (pw PeerWriter) Write(p []byte) (n int, err error) {
+	if err = pw.writeToNetwork(p); err != nil {
 		// Don't crash, just fall back to simpler logger
-		var logger = log.New(pl.RealWriter, "djdns: ", 0)
-		logger.Println(err)
+		pw.GetLogger().Println(err)
 	}
-	return pl.RealWriter.Write(p)
+	return pw.RealWriter.Write(p)
 }
 
-func (pl PeerWriter) writeToNetwork(p []byte) error {
+func (pw PeerWriter) writeToNetwork(p []byte) error {
 	// Exit early if no client
-	if pl.Client == nil {
+	if pw.Client == nil {
 		return nil
 	}
 
@@ -58,10 +63,10 @@ func (pl PeerWriter) writeToNetwork(p []byte) error {
 		"type":  "log",
 		"value": string(p),
 	}
-	if pl.Hostname != "" {
-		data["host"] = pl.Hostname
+	if pw.Hostname != "" {
+		data["host"] = pw.Hostname
 	}
-	return pl.Client.Publish(data)
+	return pw.Client.Publish(data)
 }
 
 // ------------------------------------------------

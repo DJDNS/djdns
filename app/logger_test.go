@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DJDNS/go-deje"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -71,7 +70,7 @@ func TestNewPeerWriter(t *testing.T) {
 		pw := NewPeerWriter(test.Conf)
 		assert.Equal(t, buf, pw.RealWriter)
 		assert.Equal(t, test.ExpectedHostname, pw.Hostname)
-		assert.Equal(t, test.ShouldHaveClient, pw.Client != (*deje.Client)(nil), "pw.Client was actually %#v", pw.Client)
+		assert.Equal(t, test.ShouldHaveClient, pw.Client != nil, "pw.Client was actually %#v", pw.Client)
 		assert.Equal(t, test.ExpectedOutput, buf.String())
 	}
 }
