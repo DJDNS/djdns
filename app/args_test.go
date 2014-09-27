@@ -41,14 +41,8 @@ func TestParse(t *testing.T) {
 	}
 	for _, test := range tests {
 		conf, err := Parse(test.Args, false)
-		if test.ExpectedError == "" {
-			assert.NoError(t, err, "ServerConfig failed to instantiate")
-		} else {
-			if assert.Error(t, err) {
-				assert.Equal(t, test.ExpectedError, err.Error())
-			}
-		}
 
+		assertError(t, test.ExpectedError, err)
 		assert.Equal(t, test.ExpectedConfig, conf)
 	}
 }
