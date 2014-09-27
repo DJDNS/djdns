@@ -1,22 +1,16 @@
 package app
 
 import (
-	"io"
 	"log"
 
 	"github.com/DJDNS/djdns/server"
 )
 
-func Main(argv []string, exit bool) {
-	conf, err := Parse(argv, exit)
-	if err != nil {
-		log.Fatal(err)
-	}
+func setupServer(conf ServerConfig) (*log.Logger, server.DjdnsServer) {
+	pw := NewPeerWriter(conf)
+	logger := pw.GetLogger()
 
-	var log_writer io.Writer = NewPeerWriter(conf)
-	logger := log.New(log_writer, "djdns: ", 0)
-
-	spgc := server.NewStandardPGConfig(log_writer)
+	spgc := server.NewStandardPGConfig(pw)
 	spgc.Alias.Aliases = map[string]string{
 		"<ROOT>": conf.RootAlias,
 	}
@@ -24,10 +18,18 @@ func Main(argv []string, exit bool) {
 	s := server.NewServer(spgc.Alias)
 	s.Logger = logger
 
+	return logger, s
+}
+
+func Main(argv []string, exit bool) error {
+	conf, err := Parse(argv, exit)
+	if err != nil {
+		return err
+	}
+
+	logger, s := setupServer(conf)
+
 	logger.Printf("Starting server on %s", conf.HostAddress)
 	logger.Printf("<ROOT> is '%s'", conf.RootAlias)
-	err = s.Run(conf.HostAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return s.Run(conf.HostAddress)
 }

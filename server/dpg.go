@@ -66,6 +66,7 @@ func (pg DejePageGetter) getDoc(deje_url string) (*deje_doc.Document, error) {
 
 		client, err := deje.Open(deje_url, logger, nil)
 		if err != nil {
+			logger.Println("Could not open client")
 			return nil, err
 		}
 

@@ -1,7 +1,13 @@
 package main
 
-import "github.com/DJDNS/djdns/app"
+import (
+	"log"
+
+	"github.com/DJDNS/djdns/app"
+)
 
 func main() {
-	app.Main(nil, true)
+	if err := app.Main(nil, true); err != nil {
+		log.Fatal(err)
+	}
 }
