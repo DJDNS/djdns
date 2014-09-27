@@ -18,6 +18,7 @@ Usage: djdns [options]
 
 Options:
     --root=<root>         Target URL to serve as <ROOT> [default: deje://localhost:8080/root]
+    --addr=<address>      host:port to expose DNS on [default: 0.0.0.0:9953]
     --display-name=<name> Hostname to provide in network log messages.
     -h --help             Show this message.
     --version             Print the version number.
@@ -83,7 +84,7 @@ func main() {
 
 	root_alias := getShellArg(arguments, "--root")
 	display_name := getShellArg(arguments, "--display-name")
-	addr := "0.0.0.0:9953"
+	addr := getShellArg(arguments, "--addr")
 
 	var log_writer io.Writer
 	log_writer, err = makePeerWriter(root_alias, display_name)
