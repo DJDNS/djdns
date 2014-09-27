@@ -3,5 +3,5 @@ package main
 import "github.com/DJDNS/djdns/app"
 
 func main() {
-	app.Main(nil)
+	app.Main(nil, true)
 }

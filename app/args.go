@@ -3,9 +3,7 @@ package app
 import "github.com/docopt/docopt-go"
 
 var version = "djdns 0.0.12"
-var usage = `djdns
-
-Usage: djdns [options]
+var usage = `Usage: djdns [options]
 
 Options:
     --addr=<address>      host:port to expose DNS on [default: 0.0.0.0:9953]
@@ -33,8 +31,8 @@ type ServerConfig struct {
 // Parse a list of arguments into a config struct.
 //
 // To use ARGV flags, pass nil instead of a real []string.
-func Parse(argv []string) (ServerConfig, error) {
-	arguments, err := docopt.Parse(usage, nil, true, version, true)
+func Parse(argv []string, exit bool) (ServerConfig, error) {
+	arguments, err := docopt.Parse(usage, argv, true, version, false, exit)
 	if err != nil {
 		return ServerConfig{}, err
 	}

@@ -7,8 +7,8 @@ import (
 	"github.com/DJDNS/djdns/server"
 )
 
-func Main(argv []string) {
-	conf, err := Parse(argv)
+func Main(argv []string, exit bool) {
+	conf, err := Parse(argv, exit)
 	if err != nil {
 		log.Fatal(err)
 	}
