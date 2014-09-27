@@ -14,10 +14,7 @@ import (
 var version = "djdns 0.0.12"
 var usage = `djdns
 
-Usage:
-    djdns [ --root=<root> ] [ --display-name=<name> ]
-    djdns -h | --help
-    djdns --version
+Usage: djdns [options]
 
 Options:
     --root=<root>         Target URL to serve as <ROOT> [default: deje://localhost:8080/root]
