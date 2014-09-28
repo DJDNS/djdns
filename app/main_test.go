@@ -43,13 +43,14 @@ func TestMain(t *testing.T) {
 		// Bad argument structure
 		{
 			[]string{"--addr"},
-			"djdns: --addr requires argument\n",
+			"djdns: --addr requires argument\n", // slight difference in behavior between test and real
 		},
 		// Unhostable address
 		{
-			[]string{"--addr", "9.9.9.9:13"},
-			"djdns: Starting server on 9.9.9.9:13" +
-				"\ndjdns: <ROOT> is 'deje://localhost:8080/root'" +
+			[]string{"--addr", "9.9.9.9:13", "--root", "model/demo.json"},
+			"djdns: No network logging: URL does not start with 'deje://': 'model/demo.json'" +
+				"\ndjdns: Starting server on 9.9.9.9:13" +
+				"\ndjdns: <ROOT> is 'model/demo.json'" +
 				"\ndjdns: listen udp 9.9.9.9:13: bind: cannot assign requested address\n",
 		},
 		// TODO: Test success, when we can do so without starting an unkillable goroutine
