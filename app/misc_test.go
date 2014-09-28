@@ -34,6 +34,9 @@ func setupRouter() (url string, closer func()) {
 // Fulfills the dns.ResponseWriter interface with stub functions.
 type DummyResponseWriter struct{}
 
+func (drw DummyResponseWriter) LocalAddr() net.Addr {
+	return &net.UDPAddr{}
+}
 func (drw DummyResponseWriter) RemoteAddr() net.Addr {
 	return &net.UDPAddr{}
 }
