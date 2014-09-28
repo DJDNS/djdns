@@ -1,9 +1,11 @@
 package model
 
 import (
-	"github.com/miekg/dns"
 	"reflect"
 	"testing"
+
+	"github.com/miekg/dns"
+	"github.com/stretchr/testify/assert"
 )
 
 type ToDnsTest struct {
@@ -67,4 +69,45 @@ func Test_Record_ToDns(t *testing.T) {
 			t.Fatal("record != expected")
 		}
 	}
+}
+
+// Test the cases where the record type is unfamiliar or the content is wrong
+func TestRecord_ToDns_Fail(t *testing.T) {
+	tests := []struct {
+		Record    Record
+		Errstring string
+	}{
+		{
+			Record{
+				DomainName: "weirdo.example.",
+				Rtype:      "WEIRDO",
+				Rdata:      "Presumably this content is correct for type 'WEIRDO'",
+			},
+			"Unknown Rtype",
+		},
+		{
+			Record{
+				DomainName: "bad.data.example.",
+				Rtype:      "A",
+				Rdata:      "Unparseable content",
+			},
+			"dns: bad A A: \"Unparseable\" at line: 1:38",
+		},
+		{
+			Record{
+				DomainName: "bad.data.example.",
+				Rtype:      "A",
+				Rdata:      9,
+			},
+			"Rdata was wrong type for Rtype",
+		},
+	}
+	for _, test := range tests {
+		test.Record.Normalize()
+		_, err := test.Record.ToDns()
+		if assert.Error(t, err) {
+			assert.Equal(t, test.Errstring, err.Error())
+		}
+	}
+
 }
