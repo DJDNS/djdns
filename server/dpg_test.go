@@ -9,6 +9,7 @@ import (
 
 	"github.com/DJDNS/go-deje"
 	"github.com/jcelliott/turnpike"
+	"github.com/stretchr/testify/assert"
 )
 
 type UrlTest struct {
@@ -61,6 +62,17 @@ func TestDejePageGetter_getDoc(t *testing.T) {
 	if doc2 != doc {
 		t.Fatalf("Did not return same pointer for both documents - %v vs %v", doc, doc2)
 	}
+
+	// Test error scenario without valid writer
+	invalid_topic := "deje://localhost:92"
+	_, err = pg.getDoc(invalid_topic)
+	assertError(t, "Error connecting to websocket server: websocket.Dial ws://localhost:92/ws: dial tcp 127.0.0.1:92: connection refused", err)
+
+	// Test error scenario with valid writer
+	buf := new(bytes.Buffer)
+	pg = NewDejePageGetter(buf)
+	pg.getDoc(invalid_topic)
+	assert.Equal(t, "client 'deje://localhost:92': Could not open client\n", buf.String())
 }
 
 func TestDejePageGetter_getDoc_logging(t *testing.T) {
@@ -144,4 +156,12 @@ func TestDejePageGetter_GetPage(t *testing.T) {
 		t.Error("Data was not synced from remote host")
 		t.Error(page)
 	}
+}
+
+// Cover the case where getDoc fails
+func TestDejePageGetter_GetPage_BadUrl(t *testing.T) {
+	pg := NewDejePageGetter(nil)
+	page, err := pg.GetPage("foo", nil)
+	assert.Equal(t, page, Page{})
+	assertError(t, "URL does not start with 'deje://': 'foo'", err)
 }

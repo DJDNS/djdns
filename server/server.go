@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"log"
 	"time"
 
@@ -33,14 +32,6 @@ func (ds *DjdnsServer) GetRecords(q string) ([]model.Record, error) {
 }
 
 func (ds *DjdnsServer) getRecordsAttempt(q, url string, ab Aborter) ([]model.Record, error) {
-	// Check if already aborted
-	select {
-	case <-ab:
-		return nil, errors.New("Timed out")
-	default:
-		// Do nothing - don't block on ab, idjit ;)
-	}
-
 	// Attempt to get page and branch
 	page, err := ds.PageGetter.GetPage(url, ab)
 	if err != nil {

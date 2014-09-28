@@ -1,13 +1,17 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"log"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/DJDNS/djdns/model"
 	"github.com/miekg/dns"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewServer(t *testing.T) {
@@ -19,27 +23,27 @@ func TestNewServer(t *testing.T) {
 }
 
 type GetRecordsTest struct {
-	Query    string
-	Expected []model.Record
-	ErrorMsg string
+	Query       string
+	Expected    []model.Record
+	ErrorString string
+	Description string
 }
 
 func (grt *GetRecordsTest) Run(t *testing.T, s DjdnsServer) {
 	result, err := s.GetRecords(grt.Query)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assertError(t, grt.ErrorString, err)
 	if !reflect.DeepEqual(result, grt.Expected) {
 		t.Log(grt.Query)
 		t.Log(grt.Expected)
 		t.Log(result)
-		t.Fatal(grt.ErrorMsg)
+		t.Fatal(grt.Description)
 	}
 }
 
-func setupTestData() (DjdnsServer, StandardPGConfig) {
-	spgc := NewStandardPGConfig(nil)
+func setupTestData(writer io.Writer) (DjdnsServer, StandardPGConfig) {
+	spgc := NewStandardPGConfig(writer)
 	s := NewServer(spgc.Alias)
+	s.Logger = log.New(writer, "djdns: ", 0)
 
 	root := DummyPageGetter{}
 	root.PageData.Data.Branches = []model.Branch{
@@ -70,6 +74,10 @@ func setupTestData() (DjdnsServer, StandardPGConfig) {
 			Selector: "dog*",
 			Targets:  []string{"secondary://"},
 		},
+		model.Branch{
+			Selector: "slow*",
+			Targets:  []string{"slow://"},
+		},
 	}
 	root.PageData.Data.Normalize()
 
@@ -87,16 +95,20 @@ func setupTestData() (DjdnsServer, StandardPGConfig) {
 	}
 	secondary.PageData.Data.Normalize()
 
+	slow := SlowPageGetter(2 * time.Second)
+
 	spgc.Alias.Aliases["<ROOT>"] = "root://"
 	spgc.Alias.Aliases["secondary"] = "secondary://"
+	spgc.Alias.Aliases["slow"] = "slow://"
 	spgc.Scheme.Children["root"] = &root
 	spgc.Scheme.Children["secondary"] = &secondary
+	spgc.Scheme.Children["slow"] = slow
 	return s, spgc
 }
 
 func Test_DjdnsServer_GetRecords(t *testing.T) {
 	// Setup
-	s, pg_config := setupTestData()
+	s, pg_config := setupTestData(nil)
 	root := pg_config.Scheme.Children["root"].(*DummyPageGetter)
 	secondary := pg_config.Scheme.Children["secondary"].(*DummyPageGetter)
 
@@ -105,17 +117,26 @@ func Test_DjdnsServer_GetRecords(t *testing.T) {
 		GetRecordsTest{
 			"abcde",
 			root.PageData.Data.Branches[0].Records,
+			"",
 			"Basic request",
 		},
 		GetRecordsTest{
 			"no such branch",
 			nil,
+			"",
 			"Branch does not exist",
 		},
 		GetRecordsTest{
 			"dogbreath.de",
 			secondary.PageData.Data.Branches[0].Records,
+			"",
 			"Recursive request",
+		},
+		GetRecordsTest{
+			"slow.query",
+			nil,
+			"Ran out of time",
+			"Timeout failure",
 		},
 	}
 	for i := range tests {
@@ -296,10 +317,18 @@ var resolve_tests = []ResolveTest{
 			"only.smells. A 3.3.3.3",
 		},
 	},
+	ResolveTest{
+		Description: "Timeout",
+		QuestionSection: []dns.Question{
+			dns.Question{
+				"slow.query", dns.TypeA, dns.ClassINET},
+		},
+		ShouldFail: true,
+	},
 }
 
 func Test_DjdnsServer_Handle(t *testing.T) {
-	s, _ := setupTestData()
+	s, _ := setupTestData(nil)
 	tester := RTForHandle{s}
 	for _, test := range resolve_tests {
 		testResolution(t, tester, test)
@@ -307,7 +336,8 @@ func Test_DjdnsServer_Handle(t *testing.T) {
 }
 
 func Test_DjdnsServer_Run(t *testing.T) {
-	s, _ := setupTestData()
+	buf := new(bytes.Buffer)
+	s, _ := setupTestData(buf)
 	host, port := "127.0.0.1", 9953
 	addr := fmt.Sprintf("%s:%d", host, port)
 
@@ -322,4 +352,7 @@ func Test_DjdnsServer_Run(t *testing.T) {
 	for _, test := range resolve_tests {
 		testResolution(t, tester, test)
 	}
+
+	expected_log := "djdns: Unknown Rtype\n"
+	assert.Equal(t, expected_log, buf.String())
 }
